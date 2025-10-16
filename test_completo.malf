@@ -1,0 +1,383 @@
+// ============================================================================
+// SUITE DE TESTES COMPLETA - ANALISADOR LÉXICO
+// Linguagem Matemática - UFRN
+// ============================================================================
+
+// ============================================================================
+// TESTE 1: TIPOS PRIMITIVOS E DECLARAÇÕES
+// ============================================================================
+
+int inteiro = 42
+int negativo = -15
+float ponto_flutuante = 3.14159
+float cientifico = 1.5e10
+float cientifico_negativo = 2.3e-5
+bool verdadeiro = true
+bool falso = false
+complex numero_complexo = 3+4i
+complex complexo_float = 2.5-1.2i
+complex imaginario_puro = 5i
+char caractere = 'A'
+char caractere_escape = '\n'
+string texto = "Hello, World!"
+string texto_com_escape = "Linha 1\nLinha 2\tTabulação"
+
+// ============================================================================
+// TESTE 2: TIPOS COMPOSTOS
+// ============================================================================
+
+int[] array_inteiros = [1, 2, 3, 4, 5]
+float[] array_floats = [1.1, 2.2, 3.3]
+matrix[float] matriz = [[1.0, 2.0], [3.0, 4.0]]
+matrix[int] matriz_identidade = [[1, 0], [0, 1]]
+set[int] conjunto = {1, 2, 3, 4, 5}
+set[float] conjunto_floats = {1.1, 2.2, 3.3}
+graph[int] grafo = graph.new()
+
+// ============================================================================
+// TESTE 3: OPERADORES ARITMÉTICOS
+// ============================================================================
+
+int soma = a + b
+int subtracao = a - b
+int multiplicacao = a * b
+float divisao = a / b
+int divisao_inteira = a // b
+int modulo = a % b
+int potencia = 2 ^ 10
+matrix[float] produto_matricial = A @ B
+
+// Operadores de atribuição composta
+x += 5
+y -= 3
+z *= 2
+w /= 4
+r %= 3
+
+// Operadores de incremento/decremento
+contador++
+indice--
+++prefixo
+--prefixo_dec
+
+// ============================================================================
+// TESTE 4: OPERADORES RELACIONAIS E LÓGICOS
+// ============================================================================
+
+bool igual = (a == b)
+bool diferente = (a != b)
+bool menor = (a < b)
+bool maior = (a > b)
+bool menor_igual = (a <= b)
+bool maior_igual = (a >= b)
+
+bool e_logico = (a > 0) and (b > 0)
+bool ou_logico = (a > 0) or (b > 0)
+bool negacao = not (a > 0)
+
+bool e_simbolico = (a > 0) && (b > 0)
+bool ou_simbolico = (a > 0) || (b > 0)
+bool neg_simbolica = !(a > 0)
+
+// ============================================================================
+// TESTE 5: ESTRUTURAS DE CONTROLE - IF/ELIF/ELSE
+// ============================================================================
+
+if (x > 0)
+    print("Positivo")
+elif (x < 0)
+    print("Negativo")
+else
+    print("Zero")
+
+// If aninhado
+if (a > 0)
+    if (b > 0)
+        print("Ambos positivos")
+    else
+        print("A positivo, B não positivo")
+else
+    print("A não positivo")
+
+// ============================================================================
+// TESTE 6: ESTRUTURAS DE REPETIÇÃO - WHILE
+// ============================================================================
+
+while (contador < 10)
+    print(contador)
+    contador++
+
+while (not terminou)
+    processar()
+    if (condicao)
+        break
+
+// ============================================================================
+// TESTE 7: ESTRUTURAS DE REPETIÇÃO - FOR
+// ============================================================================
+
+for (i in range(1, 10))
+    print(i)
+
+for (elemento in lista)
+    processar(elemento)
+
+for (valor, indice) in array
+    print("Índice: " + indice + ", Valor: " + valor)
+
+// ============================================================================
+// TESTE 8: DEFINIÇÃO DE FUNÇÕES
+// ============================================================================
+
+def fun int soma(int a, int b)
+    return a + b
+end def
+
+def fun float area_circulo(float raio)
+    const PI = 3.14159
+    return PI * raio ^ 2
+end def
+
+def fun void imprimir_mensagem(string msg)
+    print(msg)
+end def
+
+def fun complex multiplicar_complexos(complex z1, complex z2)
+    return z1 * z2
+end def
+
+def fun matrix[float] multiplicar_matrizes(matrix[float] A, matrix[float] B)
+    return A @ B
+end def
+
+// ============================================================================
+// TESTE 9: FUNÇÕES MATEMÁTICAS EMBUTIDAS
+// ============================================================================
+
+// Trigonométricas
+float seno = sin(pi / 2)
+float cosseno = cos(0)
+float tangente = tan(pi / 4)
+float secante = sec(0)
+float cossecante = csc(pi / 2)
+float cotangente = cot(pi / 4)
+
+// Inversas
+float arco_seno = asin(0.5)
+float arco_cosseno = acos(0.5)
+float arco_tangente = atan(1)
+
+// Outras funções
+float raiz_quadrada = sqrt(16)
+float valor_absoluto = abs(-42)
+float logaritmo = log(100)
+float logaritmo_natural = ln(2.718)
+float exponencial = exp(1)
+
+// ============================================================================
+// TESTE 10: FUNÇÕES DE ARRAYS/LISTAS
+// ============================================================================
+
+int tamanho = lista.length()
+lista.add(elemento)
+lista.push(valor)
+int removido = lista.pop()
+lista.remove(indice)
+lista.insert(posicao, valor)
+lista.clear()
+bool vazia = lista.isEmpty()
+
+// ============================================================================
+// TESTE 11: FUNÇÕES DE MATRIZES
+// ============================================================================
+
+matrix[float] transposta = matriz.transpose()
+float determinante = matriz.determinant()
+matrix[float] inversa = matriz.inverse()
+int num_linhas = matriz.rows()
+int num_colunas = matriz.cols()
+
+// ============================================================================
+// TESTE 12: FUNÇÕES DE GRAFOS
+// ============================================================================
+
+int num_vertices = grafo.nodeCount()
+int[] vizinhos = grafo.neighbors(vertice)
+float peso = grafo.weight(origem, destino)
+
+// ============================================================================
+// TESTE 13: TRATAMENTO DE EXCEÇÕES
+// ============================================================================
+
+try
+    float resultado = dividir(10, 0)
+catch (ArithmeticError e)
+    print("Erro aritmético: divisão por zero")
+catch (Error e)
+    print("Erro geral: " + e)
+finally
+    print("Limpeza de recursos")
+
+// Try-catch aninhado
+try
+    try
+        operacao_arriscada()
+    catch (TypeError e)
+        print("Erro de tipo interno")
+catch (Error e)
+    print("Erro externo")
+
+// ============================================================================
+// TESTE 14: TIPOS CUSTOMIZADOS (STRUCTS)
+// ============================================================================
+
+def Ponto
+    float x
+    float y
+
+    def fun Ponto new(float x, float y)
+        this.x = x
+        this.y = y
+    end def
+
+    def fun float distancia(Ponto outro)
+        float dx = this.x - outro.x
+        float dy = this.y - outro.y
+        return sqrt(dx^2 + dy^2)
+    end def
+end def
+
+// Uso do tipo customizado
+Ponto p1 = Ponto.new(0.0, 0.0)
+Ponto p2 = Ponto.new(3.0, 4.0)
+float dist = p1.distancia(p2)
+
+// ============================================================================
+// TESTE 15: IMPORTAÇÕES
+// ============================================================================
+
+import math_utils
+import io
+import linear_algebra
+
+// ============================================================================
+// TESTE 16: CONSTANTES
+// ============================================================================
+
+const PI = 3.14159265359
+const E = 2.71828182846
+const GRAVIDADE = 9.81
+const MAX_ITERACOES = 1000
+
+// ============================================================================
+// TESTE 17: COMENTÁRIOS (NÃO DEVEM GERAR TOKENS)
+// ============================================================================
+
+// Este é um comentário de linha
+int x = 10  // Comentário no final da linha
+
+/*
+ * Este é um comentário
+ * de bloco com múltiplas
+ * linhas
+ */
+
+int y = 20  /* Comentário inline */ + 5
+
+# Este é um comentário estilo Python
+# Também deve ser ignorado
+
+// ============================================================================
+// TESTE 18: CASOS EXTREMOS E EDGE CASES
+// ============================================================================
+
+// Números em diferentes formatos
+int zero = 0
+float zero_float = 0.0
+float muito_pequeno = 1e-100
+float muito_grande = 1e100
+
+// Strings vazias e especiais
+string vazia = ""
+string apenas_espacos = "   "
+string caracteres_especiais = "!@#$%^&*()"
+
+// Identificadores com underscores
+int _privado = 42
+int valor_com_underscores = 100
+int camelCase = 200
+int snake_case_longo_exemplo = 300
+
+// Arrays e matrizes vazios
+int[] array_vazio = []
+matrix[float] matriz_vazia = [[]]
+set[int] conjunto_vazio = {}
+
+// Expressões complexas
+float resultado = (a + b) * (c - d) / (e + f) ^ 2
+bool condicao = (x > 0) and ((y < 10) or (z == 5)) and not (w != 3)
+
+// ============================================================================
+// TESTE 19: MAIN FUNCTION
+// ============================================================================
+
+def fun void main()
+    print("Programa iniciado")
+
+    int x = 42
+    float y = 3.14
+
+    if (x > 0)
+        print("X é positivo")
+
+    for (i in range(1, 10))
+        print(i)
+
+    print("Programa finalizado")
+end def
+
+// ============================================================================
+// TESTE 20: MERGE SORT (ALGORITMO COMPLETO)
+// ============================================================================
+
+def fun void mergeSort(int[] lista)
+    if (lista.length() <= 1)
+        return
+
+    int[] esquerda = []
+    int[] direita = []
+
+    for (num, index) in lista
+        if (index < lista.length() / 2)
+            esquerda.add(num)
+        else
+            direita.add(num)
+
+    mergeSort(esquerda)
+    mergeSort(direita)
+
+    lista.clear()
+    merge(lista, esquerda, direita)
+end def
+
+def fun void merge(int[] resultado, int[] esquerda, int[] direita)
+    while (not esquerda.isEmpty() and not direita.isEmpty())
+        if (esquerda[1] <= direita[1])
+            resultado.add(esquerda[1])
+            esquerda.remove(1)
+        else
+            resultado.add(direita[1])
+            direita.remove(1)
+
+    while (not esquerda.isEmpty())
+        resultado.add(esquerda[1])
+        esquerda.remove(1)
+
+    while (not direita.isEmpty())
+        resultado.add(direita[1])
+        direita.remove(1)
+end def
+
+// ============================================================================
+// FIM DOS TESTES
+// ============================================================================

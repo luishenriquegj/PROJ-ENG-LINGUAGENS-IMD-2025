@@ -1,0 +1,5 @@
+// Teste básico de tipos
+int x = 42
+float y = 3.14
+complex z = 3+4i
+bool flag = true

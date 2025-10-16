@@ -1,126 +1,44 @@
 %{
-/*
- * ============================================================================
- * ANALISADOR LÉXICO - LINGUAGEM MATEMÁTICA
- * ============================================================================
- * Disciplina: DIM0548 - Engenharia de Linguagens
- * Grupo: ALLANE EMANOELLE, FRANKLIN OLIVEIRA, LUIS HENRIQUE, MATEUS SANTOS, MARCOS MARTINS
- *
- * Descrição:
- *   Analisador léxico para linguagem de programação voltada ao domínio
- *   matemático. Reconhece tokens definidos na gramática BNF especificada
- *   nos documentos do projeto.
- *
- * Características:
- *   - Tipagem forte com inferência
- *   - Suporte a tipos matemáticos (complex, matrix, set, graph)
- *   - Indentação como delimitador de blocos
- *   - Operadores matemáticos especializados
- * ============================================================================
- */
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-/* Contador de linha para mensagens de erro */
 int line_number = 1;
 int column_number = 1;
 
-/* Stack para gerenciar níveis de indentação */
-#define MAX_INDENT_LEVELS 100
-int indent_stack[MAX_INDENT_LEVELS];
-int indent_stack_ptr = 0;
-int current_indent = 0;
-int at_line_start = 1;
-
-/* Função para imprimir os tokens */
-void report_token(const char* token_type, const char* lexeme) {
-    printf("%-20s | %-30s | Line: %d, Col: %d\n",
-           token_type, lexeme, line_number, column_number);
-}
-
-/* Atualizar posição da coluna */
 void update_column() {
     column_number += yyleng;
 }
 
+void report_token(const char* token_type, const char* lexeme) {
+    printf("%-20s | %-30s | Line: %d, Col: %d\n",
+           token_type, lexeme, line_number, column_number);
+    update_column();
+}
 %}
-
-/* Definições de padrões reutilizáveis */
-DIGIT       [0-9]
-LETTER      [a-zA-Z]
-UNDERSCORE  _
-ID_START    {LETTER}
-ID_CHAR     ({LETTER}|{DIGIT}|{UNDERSCORE})
 
 %%
 
-    /* ========================================================================
-     * SEÇÃO 1: WHITESPACE E NEWLINES (Processamento de Indentação)
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 1: WHITESPACE E NEWLINES */
+    /* ======================================================================== */
 
-^[ \t]*\n   {
-    /* Linha vazia - ignora mas incrementa contador */
+\n {
     line_number++;
     column_number = 1;
-    at_line_start = 1;
 }
 
-^[ \t]*     {
-    /* Início de linha - processa indentação */
-    if (at_line_start) {
-        int spaces = 0;
-        for (int i = 0; i < yyleng; i++) {
-            if (yytext[i] == ' ') spaces++;
-            else if (yytext[i] == '\t') spaces += 4; /* Tab = 4 espaços */
-        }
-
-        current_indent = spaces / 4; /* Cada nível = 4 espaços */
-
-        /* Emite INDENT ou DEDENT conforme necessário */
-        if (indent_stack_ptr == 0) {
-            indent_stack[indent_stack_ptr++] = 0;
-        }
-
-        if (current_indent > indent_stack[indent_stack_ptr - 1]) {
-            /* Aumentou indentação */
-            indent_stack[indent_stack_ptr++] = current_indent;
-            report_token("INDENT", "");
-        } else if (current_indent < indent_stack[indent_stack_ptr - 1]) {
-            /* Diminuiu indentação */
-            while (indent_stack_ptr > 0 &&
-                   indent_stack[indent_stack_ptr - 1] > current_indent) {
-                indent_stack_ptr--;
-                report_token("DEDENT", "");
-            }
-        }
-
-        at_line_start = 0;
-        column_number += yyleng;
-    }
-}
-
-\n          {
-    line_number++;
-    column_number = 1;
-    at_line_start = 1;
-    report_token("NEWLINE", "\\n");
-}
-
-[ \t]+      {
-    /* Whitespace no meio da linha - ignora */
+[ \t]+ {
     update_column();
 }
 
-    /* ========================================================================
-     * SEÇÃO 2: COMENTÁRIOS
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 2: COMENTÁRIOS */
+    /* ======================================================================== */
 
-"//".*              { update_column(); /* Comentário de linha - ignora */ }
-"#".*               { update_column(); /* Comentário estilo Python - ignora */ }
-"/*"([^*]|"*"+[^*/])*"*"+"/"  {
-    /* Comentário de bloco - conta linhas internas */
+"//".*         { update_column(); }
+
+"#".*          { update_column(); }
+
+"/*"([^*]|"*"+[^*/])*"*"+"/" {
     for (int i = 0; i < yyleng; i++) {
         if (yytext[i] == '\n') {
             line_number++;
@@ -131,249 +49,225 @@ ID_CHAR     ({LETTER}|{DIGIT}|{UNDERSCORE})
     }
 }
 
-    /* ========================================================================
-     * SEÇÃO 3: PALAVRAS-CHAVE (Keywords)
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 3: PALAVRAS-CHAVE */
+    /* ======================================================================== */
 
-"def"       { report_token("DEF", yytext); update_column(); }
-"end"       { report_token("END", yytext); update_column(); }
-"fun"       { report_token("FUN", yytext); update_column(); }
-"if"        { report_token("IF", yytext); update_column(); }
-"elif"      { report_token("ELIF", yytext); update_column(); }
-"else"      { report_token("ELSE", yytext); update_column(); }
-"while"     { report_token("WHILE", yytext); update_column(); }
-"for"       { report_token("FOR", yytext); update_column(); }
-"in"        { report_token("IN", yytext); update_column(); }
-"return"    { report_token("RETURN", yytext); update_column(); }
-"break"     { report_token("BREAK", yytext); update_column(); }
-"continue"  { report_token("CONTINUE", yytext); update_column(); }
-"try"       { report_token("TRY", yytext); update_column(); }
-"catch"     { report_token("CATCH", yytext); update_column(); }
-"finally"   { report_token("FINALLY", yytext); update_column(); }
-"import"    { report_token("IMPORT", yytext); update_column(); }
-"const"     { report_token("CONST", yytext); update_column(); }
-"var"       { report_token("VAR", yytext); update_column(); }
-"this"      { report_token("THIS", yytext); update_column(); }
-"new"       { report_token("NEW", yytext); update_column(); }
+"def"      { report_token("DEF", yytext); }
+"end"      { report_token("END", yytext); }
+"fun"      { report_token("FUN", yytext); }
+"if"       { report_token("IF", yytext); }
+"elif"     { report_token("ELIF", yytext); }
+"else"     { report_token("ELSE", yytext); }
+"while"    { report_token("WHILE", yytext); }
+"for"      { report_token("FOR", yytext); }
+"in"       { report_token("IN", yytext); }
+"return"   { report_token("RETURN", yytext); }
+"break"    { report_token("BREAK", yytext); }
+"continue" { report_token("CONTINUE", yytext); }
+"try"      { report_token("TRY", yytext); }
+"catch"    { report_token("CATCH", yytext); }
+"finally"  { report_token("FINALLY", yytext); }
+"import"   { report_token("IMPORT", yytext); }
+"const"    { report_token("CONST", yytext); }
+"var"      { report_token("VAR", yytext); }
+"this"     { report_token("THIS", yytext); }
+"new"      { report_token("NEW", yytext); }
 
-    /* ========================================================================
-     * SEÇÃO 4: TIPOS PRIMITIVOS
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 4: TIPOS PRIMITIVOS */
+    /* ======================================================================== */
 
-"int"       { report_token("INT_TYPE", yytext); update_column(); }
-"float"     { report_token("FLOAT_TYPE", yytext); update_column(); }
-"bool"      { report_token("BOOL_TYPE", yytext); update_column(); }
-"complex"   { report_token("COMPLEX_TYPE", yytext); update_column(); }
-"char"      { report_token("CHAR_TYPE", yytext); update_column(); }
-"string"    { report_token("STRING_TYPE", yytext); update_column(); }
-"void"      { report_token("VOID_TYPE", yytext); update_column(); }
-"matrix"    { report_token("MATRIX_TYPE", yytext); update_column(); }
-"set"       { report_token("SET_TYPE", yytext); update_column(); }
-"graph"     { report_token("GRAPH_TYPE", yytext); update_column(); }
+"int"      { report_token("INT_TYPE", yytext); }
+"float"    { report_token("FLOAT_TYPE", yytext); }
+"bool"     { report_token("BOOL_TYPE", yytext); }
+"complex"  { report_token("COMPLEX_TYPE", yytext); }
+"char"     { report_token("CHAR_TYPE", yytext); }
+"string"   { report_token("STRING_TYPE", yytext); }
+"void"     { report_token("VOID_TYPE", yytext); }
+"matrix"   { report_token("MATRIX_TYPE", yytext); }
+"set"      { report_token("SET_TYPE", yytext); }
+"graph"    { report_token("GRAPH_TYPE", yytext); }
 
-    /* ========================================================================
-     * SEÇÃO 5: LITERAIS BOOLEANOS E NULL
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 5: LITERAIS BOOLEANOS E NULL */
+    /* ======================================================================== */
 
-"true"      { report_token("TRUE", yytext); update_column(); }
-"false"     { report_token("FALSE", yytext); update_column(); }
-"null"      { report_token("NULL", yytext); update_column(); }
+"true"     { report_token("TRUE", yytext); }
+"false"    { report_token("FALSE", yytext); }
+"null"     { report_token("NULL", yytext); }
 
-    /* ========================================================================
-     * SEÇÃO 6: OPERADORES LÓGICOS
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 6: OPERADORES LÓGICOS */
+    /* ======================================================================== */
 
-"and"       { report_token("AND", yytext); update_column(); }
-"or"        { report_token("OR", yytext); update_column(); }
-"not"       { report_token("NOT", yytext); update_column(); }
+"and"      { report_token("AND", yytext); }
+"or"       { report_token("OR", yytext); }
+"not"      { report_token("NOT", yytext); }
 
-    /* ========================================================================
-     * SEÇÃO 7: FUNÇÕES MATEMÁTICAS EMBUTIDAS
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 7: FUNÇÕES MATEMÁTICAS */
+    /* ======================================================================== */
 
-"sin"|"sen"     { report_token("SIN", yytext); update_column(); }
-"cos"           { report_token("COS", yytext); update_column(); }
-"tan"           { report_token("TAN", yytext); update_column(); }
-"sec"           { report_token("SEC", yytext); update_column(); }
-"csc"|"cosec"   { report_token("CSC", yytext); update_column(); }
-"cot"|"cotan"   { report_token("COT", yytext); update_column(); }
-"asin"|"arcsin" { report_token("ASIN", yytext); update_column(); }
-"acos"|"arccos" { report_token("ACOS", yytext); update_column(); }
-"atan"|"arctan" { report_token("ATAN", yytext); update_column(); }
-"sqrt"          { report_token("SQRT", yytext); update_column(); }
-"abs"           { report_token("ABS", yytext); update_column(); }
-"log"           { report_token("LOG", yytext); update_column(); }
-"ln"            { report_token("LN", yytext); update_column(); }
-"exp"           { report_token("EXP", yytext); update_column(); }
+"sin"|"sen"     { report_token("SIN", yytext); }
+"cos"           { report_token("COS", yytext); }
+"tan"           { report_token("TAN", yytext); }
+"sec"           { report_token("SEC", yytext); }
+"csc"|"cosec"   { report_token("CSC", yytext); }
+"cot"|"cotan"   { report_token("COT", yytext); }
+"asin"|"arcsin" { report_token("ASIN", yytext); }
+"acos"|"arccos" { report_token("ACOS", yytext); }
+"atan"|"arctan" { report_token("ATAN", yytext); }
+"sqrt"          { report_token("SQRT", yytext); }
+"abs"           { report_token("ABS", yytext); }
+"log"           { report_token("LOG", yytext); }
+"ln"            { report_token("LN", yytext); }
+"exp"           { report_token("EXP", yytext); }
 
     /* Funções de arrays/listas */
-"length"        { report_token("LENGTH", yytext); update_column(); }
-"add"           { report_token("ADD", yytext); update_column(); }
-"push"          { report_token("PUSH", yytext); update_column(); }
-"pop"           { report_token("POP", yytext); update_column(); }
-"remove"        { report_token("REMOVE", yytext); update_column(); }
-"insert"        { report_token("INSERT", yytext); update_column(); }
-"clear"         { report_token("CLEAR", yytext); update_column(); }
-"isEmpty"       { report_token("IS_EMPTY", yytext); update_column(); }
+"length"   { report_token("LENGTH", yytext); }
+"add"      { report_token("ADD", yytext); }
+"push"     { report_token("PUSH", yytext); }
+"pop"      { report_token("POP", yytext); }
+"remove"   { report_token("REMOVE", yytext); }
+"insert"   { report_token("INSERT", yytext); }
+"clear"    { report_token("CLEAR", yytext); }
+"isEmpty"  { report_token("IS_EMPTY", yytext); }
 
     /* Funções de matrizes */
-"transpose"     { report_token("TRANSPOSE", yytext); update_column(); }
-"determinant"   { report_token("DETERMINANT", yytext); update_column(); }
-"inverse"       { report_token("INVERSE", yytext); update_column(); }
-"rows"          { report_token("ROWS", yytext); update_column(); }
-"cols"          { report_token("COLS", yytext); update_column(); }
+"transpose"   { report_token("TRANSPOSE", yytext); }
+"determinant" { report_token("DETERMINANT", yytext); }
+"inverse"     { report_token("INVERSE", yytext); }
+"rows"        { report_token("ROWS", yytext); }
+"cols"        { report_token("COLS", yytext); }
 
     /* Funções de grafos */
-"nodeCount"     { report_token("NODE_COUNT", yytext); update_column(); }
-"neighbors"     { report_token("NEIGHBORS", yytext); update_column(); }
-"weight"        { report_token("WEIGHT", yytext); update_column(); }
+"nodeCount"  { report_token("NODE_COUNT", yytext); }
+"neighbors"  { report_token("NEIGHBORS", yytext); }
+"weight"     { report_token("WEIGHT", yytext); }
 
     /* Funções de I/O */
-"print"         { report_token("PRINT", yytext); update_column(); }
-"println"       { report_token("PRINTLN", yytext); update_column(); }
-"read"          { report_token("READ", yytext); update_column(); }
-"range"         { report_token("RANGE", yytext); update_column(); }
+"print"    { report_token("PRINT", yytext); }
+"println"  { report_token("PRINTLN", yytext); }
+"read"     { report_token("READ", yytext); }
+"range"    { report_token("RANGE", yytext); }
 
-    /* ========================================================================
-     * SEÇÃO 8: LITERAIS NUMÉRICOS
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 8: LITERAIS NUMÉRICOS */
+    /* ======================================================================== */
 
-{DIGIT}+"."{DIGIT}+([eE][+-]?{DIGIT}+)?  {
-    /* Float com notação científica opcional */
+[0-9]+\.[0-9]+([eE][+-]?[0-9]+)? {
     report_token("FLOAT_LITERAL", yytext);
-    update_column();
 }
 
-{DIGIT}+[eE][+-]?{DIGIT}+  {
-    /* Float em notação científica sem ponto */
+[0-9]+[eE][+-]?[0-9]+ {
     report_token("FLOAT_LITERAL", yytext);
-    update_column();
 }
 
-{DIGIT}+  {
-    /* Inteiro */
+[0-9]+ {
     report_token("INT_LITERAL", yytext);
-    update_column();
 }
 
-({DIGIT}+|{DIGIT}+"."{DIGIT}+)[+-]{DIGIT}+("i"|"j")  {
-    /* Número complexo: 3+4i ou 2.5-1.2i */
+([0-9]+|[0-9]+\.[0-9]+)[+-][0-9]+[ij] {
     report_token("COMPLEX_LITERAL", yytext);
-    update_column();
 }
 
-({DIGIT}+|{DIGIT}+"."{DIGIT}+)("i"|"j")  {
-    /* Número complexo imaginário puro: 4i */
+([0-9]+|[0-9]+\.[0-9]+)[ij] {
     report_token("COMPLEX_LITERAL", yytext);
-    update_column();
 }
 
-    /* ========================================================================
-     * SEÇÃO 9: LITERAIS DE STRING E CHAR
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 9: LITERAIS DE STRING E CHAR */
+    /* ======================================================================== */
 
-\"([^\"\\]|\\.)*\"  {
-    /* String com escape sequences */
+\"([^\"\\]|\\.)*\" {
     report_token("STRING_LITERAL", yytext);
-    update_column();
 }
 
-'([^'\\]|\\.)' {
-    /* Char com escape sequences */
+\'([^\'\\]|\\.)\' {
     report_token("CHAR_LITERAL", yytext);
-    update_column();
 }
 
-    /* ========================================================================
-     * SEÇÃO 10: IDENTIFICADORES
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 10: IDENTIFICADORES */
+    /* ======================================================================== */
 
-{ID_START}{ID_CHAR}*  {
+[a-zA-Z_][a-zA-Z0-9_]* {
     report_token("IDENTIFIER", yytext);
-    update_column();
 }
 
-    /* ========================================================================
-     * SEÇÃO 11: OPERADORES
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 11: OPERADORES */
+    /* ======================================================================== */
 
     /* Operadores aritméticos */
-"+"         { report_token("PLUS", yytext); update_column(); }
-"-"         { report_token("MINUS", yytext); update_column(); }
-"*"         { report_token("STAR", yytext); update_column(); }
-"/"         { report_token("SLASH", yytext); update_column(); }
-"//"        { report_token("FLOOR_DIV", yytext); update_column(); }
-"%"         { report_token("MOD", yytext); update_column(); }
-"^"         { report_token("POWER", yytext); update_column(); }
-"@"         { report_token("MATMUL", yytext); update_column(); }
+"+"  { report_token("PLUS", yytext); }
+"-"  { report_token("MINUS", yytext); }
+"*"  { report_token("STAR", yytext); }
+"/"  { report_token("SLASH", yytext); }
+"//" { report_token("FLOOR_DIV", yytext); }
+"%"  { report_token("MOD", yytext); }
+"^"  { report_token("POWER", yytext); }
+"@"  { report_token("MATMUL", yytext); }
 
     /* Operadores de atribuição */
-"="         { report_token("ASSIGN", yytext); update_column(); }
-"+="        { report_token("PLUS_ASSIGN", yytext); update_column(); }
-"-="        { report_token("MINUS_ASSIGN", yytext); update_column(); }
-"*="        { report_token("STAR_ASSIGN", yytext); update_column(); }
-"/="        { report_token("SLASH_ASSIGN", yytext); update_column(); }
-"%="        { report_token("MOD_ASSIGN", yytext); update_column(); }
+"="  { report_token("ASSIGN", yytext); }
+"+=" { report_token("PLUS_ASSIGN", yytext); }
+"-=" { report_token("MINUS_ASSIGN", yytext); }
+"*=" { report_token("STAR_ASSIGN", yytext); }
+"/=" { report_token("SLASH_ASSIGN", yytext); }
+"%=" { report_token("MOD_ASSIGN", yytext); }
 
     /* Operadores de incremento/decremento */
-"++"        { report_token("INCREMENT", yytext); update_column(); }
-"--"        { report_token("DECREMENT", yytext); update_column(); }
+"++" { report_token("INCREMENT", yytext); }
+"--" { report_token("DECREMENT", yytext); }
 
     /* Operadores relacionais */
-"=="        { report_token("EQUAL", yytext); update_column(); }
-"!="        { report_token("NOT_EQUAL", yytext); update_column(); }
-"<"         { report_token("LESS", yytext); update_column(); }
-">"         { report_token("GREATER", yytext); update_column(); }
-"<="        { report_token("LESS_EQUAL", yytext); update_column(); }
-">="        { report_token("GREATER_EQUAL", yytext); update_column(); }
+"==" { report_token("EQUAL", yytext); }
+"!=" { report_token("NOT_EQUAL", yytext); }
+"<"  { report_token("LESS", yytext); }
+">"  { report_token("GREATER", yytext); }
+"<=" { report_token("LESS_EQUAL", yytext); }
+">=" { report_token("GREATER_EQUAL", yytext); }
 
     /* Operadores lógicos (símbolos) */
-"&&"        { report_token("LOGICAL_AND", yytext); update_column(); }
-"||"        { report_token("LOGICAL_OR", yytext); update_column(); }
-"!"         { report_token("LOGICAL_NOT", yytext); update_column(); }
+"&&" { report_token("LOGICAL_AND", yytext); }
+"||" { report_token("LOGICAL_OR", yytext); }
+"!"  { report_token("LOGICAL_NOT", yytext); }
 
-    /* ========================================================================
-     * SEÇÃO 12: DELIMITADORES E PONTUAÇÃO
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 12: DELIMITADORES E PONTUAÇÃO */
+    /* ======================================================================== */
 
-"("         { report_token("LPAREN", yytext); update_column(); }
-")"         { report_token("RPAREN", yytext); update_column(); }
-"["         { report_token("LBRACKET", yytext); update_column(); }
-"]"         { report_token("RBRACKET", yytext); update_column(); }
-"{"         { report_token("LBRACE", yytext); update_column(); }
-"}"         { report_token("RBRACE", yytext); update_column(); }
-","         { report_token("COMMA", yytext); update_column(); }
-";"         { report_token("SEMICOLON", yytext); update_column(); }
-":"         { report_token("COLON", yytext); update_column(); }
-"."         { report_token("DOT", yytext); update_column(); }
+"("  { report_token("LPAREN", yytext); }
+")"  { report_token("RPAREN", yytext); }
+"["  { report_token("LBRACKET", yytext); }
+"]"  { report_token("RBRACKET", yytext); }
+"{"  { report_token("LBRACE", yytext); }
+"}"  { report_token("RBRACE", yytext); }
+","  { report_token("COMMA", yytext); }
+";"  { report_token("SEMICOLON", yytext); }
+":"  { report_token("COLON", yytext); }
+"."  { report_token("DOT", yytext); }
 
-    /* ========================================================================
-     * SEÇÃO 13: TRATAMENTO DE ERROS
-     * ======================================================================== */
+    /* ======================================================================== */
+    /* SEÇÃO 13: TRATAMENTO DE ERROS */
+    /* ======================================================================== */
 
-.           {
+. {
     fprintf(stderr, "ERRO LÉXICO: Caractere inválido '%s' na linha %d, coluna %d\n",
             yytext, line_number, column_number);
     update_column();
 }
 
-<<EOF>>     {
-    /* Emite DEDENTs pendentes ao final do arquivo */
-    while (indent_stack_ptr > 1) {
-        indent_stack_ptr--;
-        report_token("DEDENT", "");
-    }
+<<EOF>> {
     return 0;
 }
 
 %%
 
-/* ============================================================================
- * CÓDIGO C AUXILIAR
- * ============================================================================ */
-
 int yywrap(void) {
-    return 1; /* Indica fim de entrada */
+    return 1;
 }
 
 int main(int argc, char** argv) {
@@ -385,7 +279,6 @@ int main(int argc, char** argv) {
     printf("%-20s | %-30s | Posição\n", "TOKEN", "LEXEMA");
     printf("----------------------------------------------------------------------------\n");
 
-    /* Arquivo de entrada */
     if (argc > 1) {
         input_file = fopen(argv[1], "r");
         if (!input_file) {
@@ -397,12 +290,11 @@ int main(int argc, char** argv) {
         printf("Lendo da entrada padrão...\n\n");
     }
 
-    /* Executa o analisador léxico */
     yylex();
 
     printf("============================================================================\n");
     printf("Análise léxica concluída com sucesso!\n");
-    printf("Total de linhas processadas: %d\n", line_number - 1);
+    printf("Total de linhas processadas: %d\n", line_number);
     printf("============================================================================\n");
 
     if (input_file) {

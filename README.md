@@ -255,18 +255,7 @@ range(a, b)     // Gera sequência de a até b
 
 #### 7. Tokens Especiais: Indentação
 
-**Nota:** A versão atual do lexer (lexer.l) trata indentação de forma **simplificada**. O suporte completo a
-INDENT/DEDENT com stack de indentação foi documentado no arquivo original em C, mas não está totalmente implementado no
-arquivo Flex fornecido.
-
-Implementação futura deve incluir:
-
-- Stack pra gerenciar níveis de indentação
-- Impressão de tokens INDENT quando indentação aumenta
-- Impressão de tokens DEDENT quando indentação diminui
-- Tratamento especial de linhas vazias
-
-**Regra esperada:** Cada nível de indentação = 4 espaços (ou 1 tab)
+// ainda não fiz
 
 #### 8. Comentários
 
@@ -364,7 +353,7 @@ Organizada em 13 seções:
 ```c
 int yywrap(void) {
     return 1;  // Indica fim de entrada
-}
+}	
 
 int main(int argc, char** argv) {
     // Abre arquivo ou usa stdin

@@ -1,0 +1,9 @@
+import io
+
+def fun void main()
+    int[] numeros = [1, 2, 3, 4, 5]
+    float[] valores = [1.1, 2.2, 3.3]
+
+    print(numeros)
+    print(valores)
+end def

@@ -1,0 +1,13 @@
+import io
+
+def fun void main()
+    int x = 42
+    float y = 3.14
+    bool flag = true
+    string msg = "Teste de variáveis"
+
+    print(msg)
+    print(x)
+    print(y)
+    print(flag)
+end def

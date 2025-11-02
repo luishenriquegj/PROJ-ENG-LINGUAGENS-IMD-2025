@@ -471,12 +471,12 @@ gcc lex.yy.c -o lexer -lfl
 CC = gcc
 FLEX = flex
 
-all: lexer
+all: src/lexer
 
-lexer: lex.yy.c
+lexer: src/lex.yy.c
 	$(CC) -o lexer lex.yy.c
 
-lex.yy.c: lexer.l
+lex.yy.c: src/lexer.l
 	$(FLEX) lexer.l
 
 clean:

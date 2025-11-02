@@ -1,0 +1,5 @@
+import io
+
+def fun void main()
+    print("Hello, World!")
+end def

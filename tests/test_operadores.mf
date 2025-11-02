@@ -1,5 +1,0 @@
-// Teste de operadores
-int soma = a + b
-float div = x / y
-int potencia = 2 ^ 10
-matrix[float] produto = A @ B

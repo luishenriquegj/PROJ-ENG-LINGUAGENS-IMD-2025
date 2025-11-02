@@ -40,10 +40,23 @@ statement:
     var_declaration
 
 var declaration: 
-     VAR IDENTIFIER ASSIGN expression SEMICOLON
+    VAR IDENTIFIER ASSIGN expression SEMICOLON
     | CONST IDENTIFIER ASSIGN expression SEMICOLON
 
+expression:
+    value PLUS value
+    | value MINUS value
+    | value STAR value
+    | value SLASH value
 
+value:
+    IDENTIFIER
+    | INT_LITERAL
+    | FLOAT_LITERAL
+    | COMPLEX_LITERAL
+    | CHAR_LITERAL
+    | STRING_LITERAL
+    | NULL
 
 %%
 

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Incluir os tokens do parser (DEVE VIR ANTES)
 #include "parser.tab.h"
 
 extern FILE* yyin;

@@ -1,0 +1,33 @@
+import io
+
+def fun void main()
+    # Teste de char
+    char c1 = 'A'
+    char c2 = 'z'
+    char newline = '\n'
+    char tab = '\t'
+
+    print(c1)
+    print(c2)
+
+    # Teste de string com escapes
+    string msg1 = "Hello\nWorld"
+    string msg2 = "Tab\there"
+    string msg3 = "Quote: \"test\""
+
+    print(msg1)
+    print(msg2)
+    print(msg3)
+
+    # Teste de notação científica
+    float big = 1.5e10
+    float small = 2.5e-3
+    float scientific = 1.23E5
+
+    print(big)
+    print(small)
+    print(scientific)
+
+    print("Testes de literais especiais concluidos")
+end def
+

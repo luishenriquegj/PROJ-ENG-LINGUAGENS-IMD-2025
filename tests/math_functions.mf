@@ -1,0 +1,41 @@
+import io
+import math
+
+def fun void main()
+    # Teste de funções matemáticas
+    float x = 3.14159
+
+    float sen_x = sin(x)
+    float cos_x = cos(x)
+    float tan_x = tan(x)
+
+    print(sen_x)
+    print(cos_x)
+    print(tan_x)
+
+    # Funções adicionais
+    float raiz = sqrt(16.0)
+    float absoluto = abs(-42.5)
+    float logaritmo = log(100.0)
+    float ln_e = ln(2.71828)
+    float exponencial = exp(2.0)
+
+    print(raiz)
+    print(absoluto)
+    print(logaritmo)
+    print(ln_e)
+    print(exponencial)
+
+    # Operadores especiais
+    int a = 10
+    int b = 3
+
+    int div_int = a // b
+    int modulo = a % b
+    int potencia = 2 ^ 8
+
+    print(div_int)
+    print(modulo)
+    print(potencia)
+end def
+

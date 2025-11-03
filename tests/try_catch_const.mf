@@ -1,0 +1,32 @@
+import io
+
+def fun int divide(int a, int b)
+    try
+        if (b == 0)
+            return -1
+        return a / b
+    catch (int error)
+        print("Erro de divisao")
+        return -1
+    finally
+        print("Operacao finalizada")
+end def
+
+def fun void main()
+    # Teste de try-catch-finally
+    int resultado1 = divide(10, 2)
+    print(resultado1)
+
+    int resultado2 = divide(10, 0)
+    print(resultado2)
+
+    # Constantes
+    const PI = 3.14159
+    const MAX_SIZE = 100
+
+    print(PI)
+    print(MAX_SIZE)
+
+    print("Testes de try-catch e const concluidos")
+end def
+

@@ -1,0 +1,16 @@
+import io
+
+def fun void main()
+    # Teste de conjuntos
+    set[int] numeros = {1, 2, 3, 4, 5}
+
+    print(numeros)
+
+    # Operações com conjuntos - in está implementado
+    int x = 3
+    bool tem = x in numeros
+    print(tem)
+
+    print("Tipos avancados testados")
+end def
+

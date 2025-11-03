@@ -1,0 +1,53 @@
+import io
+
+def fun int[] criarArray(int tamanho)
+    int[] resultado = [1, 2, 3, 4, 5]
+    return resultado
+end def
+
+def fun float potencia(float base, float exp)
+    float resultado = base ^ exp
+    return resultado
+end def
+
+def fun void main()
+    # Teste de divisão inteira
+    int a = 17
+    int b = 5
+    int quociente = a // b
+    int resto = a % b
+
+    print(quociente)
+    print(resto)
+
+    # Teste de potência
+    float pot1 = 2.0 ^ 3.0
+    float pot2 = potencia(3.0, 2.0)
+    int pot3 = 2 ^ 10
+
+    print(pot1)
+    print(pot2)
+    print(pot3)
+
+    # Teste de operadores relacionais
+    bool igual = a == b
+    bool diferente = a != b
+    bool menor = a < b
+    bool maior = a > b
+    bool menorIgual = a <= b
+    bool maiorIgual = a >= b
+
+    print(igual)
+    print(diferente)
+    print(menor)
+    print(maior)
+    print(menorIgual)
+    print(maiorIgual)
+
+    # Teste de array retornado por função
+    int[] arr = criarArray(5)
+    print(arr)
+
+    print("Operadores matematicos especiais testados")
+end def
+

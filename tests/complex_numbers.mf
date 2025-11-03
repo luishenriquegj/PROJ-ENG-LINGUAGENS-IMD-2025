@@ -1,0 +1,21 @@
+import io
+import math
+
+def fun void main()
+    # Teste de tipos complexos
+    complex z1 = 3+4i
+    complex z2 = 2.5-1.5i
+    complex z3 = 5i
+
+    print(z1)
+    print(z2)
+    print(z3)
+
+    # Operações com complexos
+    complex soma = z1 + z2
+    complex produto = z1 * z2
+
+    print(soma)
+    print(produto)
+end def
+

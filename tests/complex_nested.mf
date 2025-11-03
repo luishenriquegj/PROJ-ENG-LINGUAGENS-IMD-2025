@@ -1,0 +1,33 @@
+import io
+
+def fun void main()
+    # Teste de loops aninhados
+    int i = 0
+    while (i < 3)
+        int j = 0
+        while (j < 2)
+            print(j)
+            j++
+        print(i)
+        i++
+
+    # Teste de if-elif-else simples
+    int x = 10
+
+    if (x > 0)
+        print("x positivo")
+    elif (x == 0)
+        print("x zero")
+    else
+        print("x negativo")
+
+    # Teste de for com índice
+    int[] valores = [10, 20, 30]
+
+    for (idx, val in valores)
+        print(idx)
+        print(val)
+
+    print("Testes aninhados concluidos")
+end def
+

@@ -1,0 +1,44 @@
+import io
+import math
+
+def fun int factorial(int n)
+    if (n <= 1)
+        return 1
+
+    return n * factorial(n - 1)
+end def
+
+def fun int fibonacci(int n)
+    if (n <= 1)
+        return n
+
+    int a = 0
+    int b = 1
+    int i = 2
+
+    while (i <= n)
+        int temp = a + b
+        a = b
+        b = temp
+        i++
+
+    return b
+end def
+
+def fun float[] generate_sequence(int count)
+    float[] result = [1.0, 2.0, 3.0]
+    return result
+end def
+
+def fun void main()
+    int n = 5
+    int fact = factorial(n)
+    int fib = fibonacci(n)
+
+    print(fact)
+    print(fib)
+
+    float[] seq = generate_sequence(10)
+    print(seq)
+end def
+

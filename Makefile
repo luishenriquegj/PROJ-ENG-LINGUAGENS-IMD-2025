@@ -3,75 +3,123 @@ CFLAGS = -Wall -Wno-unused-function -g -D_GNU_SOURCE
 LEX = flex
 YACC = bison
 
-SRC = src
-BUILD = build
-TESTS = tests
+# Diretórios
+BUILD_DIR = build
+SRC_DIR = src
+TEST_DIR = tests
 
+# Arquivos de saída
 TARGET = mathc
-LEXTEST = test_lexer
+TEST_TOKENS = test_tokens
+OBJS = $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o $(BUILD_DIR)/main.o
 
-YACC_SRC = $(SRC)/parser.y
-LEX_SRC = $(SRC)/lexer.l
-YACC_OUT = $(BUILD)/parser.tab.c
-YACC_HDR = $(BUILD)/parser.tab.h
-LEX_OUT = $(BUILD)/lex.yy.c
+# Criar diretório build
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-OBJS = $(BUILD)/lex.yy.o $(BUILD)/parser.tab.o $(BUILD)/ast.o $(BUILD)/main.o
+# Regra principal
+all: $(BUILD_DIR) $(TARGET)
 
-.PHONY: all clean test lexer-test debug help
-
-all: $(TARGET)
-
-$(BUILD):
-	mkdir -p $(BUILD)
-
-$(YACC_OUT) $(YACC_HDR): $(YACC_SRC) | $(BUILD)
-	$(YACC) -d -o $(YACC_OUT) $<
-
-$(LEX_OUT): $(LEX_SRC) $(YACC_HDR) | $(BUILD)
-	$(LEX) -o $@ $<
-
-$(BUILD)/lex.yy.o: $(LEX_OUT)
-	$(CC) $(CFLAGS) -I$(BUILD) -c -o $@ $<
-
-$(BUILD)/parser.tab.o: $(YACC_OUT)
-	$(CC) $(CFLAGS) -I$(BUILD) -I$(SRC) -c -o $@ $<
-
-$(BUILD)/ast.o: $(SRC)/ast.c $(SRC)/ast.h $(YACC_HDR)
-	$(CC) $(CFLAGS) -I$(BUILD) -I$(SRC) -c -o $@ $<
-
-$(BUILD)/main.o: $(SRC)/main.c $(SRC)/ast.h $(YACC_HDR)
-	$(CC) $(CFLAGS) -I$(BUILD) -I$(SRC) -c -o $@ $<
-
+# Gerar o executável final
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
+	@echo "✅ Compilador gerado com sucesso!"
 
-$(LEXTEST): test_lexer.c $(BUILD)/lex.yy.o $(BUILD)/parser.tab.o $(BUILD)/ast.o | $(BUILD)
-	$(CC) $(CFLAGS) -I$(BUILD) -I$(SRC) -o $@ $^
+# Gerar ferramenta de teste de tokens
+$(TEST_TOKENS): $(BUILD_DIR) $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o test_tokens.c
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) -o $@ test_tokens.c $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o
+	@echo "✅ Test tokens gerado!"
 
-clean:
-	rm -rf $(BUILD) $(TARGET) $(LEXTEST)
+# Compilar main.c
+$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c $(SRC_DIR)/ast.h $(BUILD_DIR)/parser.tab.h
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) -I$(SRC_DIR) -c -o $@ $(SRC_DIR)/main.c
 
+# Compilar ast.c
+$(BUILD_DIR)/ast.o: $(SRC_DIR)/ast.c $(SRC_DIR)/ast.h
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) -I$(SRC_DIR) -c -o $@ $(SRC_DIR)/ast.c
+
+# Compilar o parser gerado pelo Bison
+$(BUILD_DIR)/parser.tab.o: $(BUILD_DIR)/parser.tab.c $(BUILD_DIR)/parser.tab.h $(SRC_DIR)/ast.h
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) -I$(SRC_DIR) -c -o $@ $(BUILD_DIR)/parser.tab.c
+
+# Gerar o parser com Bison
+$(BUILD_DIR)/parser.tab.c $(BUILD_DIR)/parser.tab.h: $(SRC_DIR)/parser.y
+	$(YACC) -Wcounterexamples -Wconflicts-sr -Wconflicts-rr -v -d -o $(BUILD_DIR)/parser.tab.c $(SRC_DIR)/parser.y
+
+# Compilar o lexer gerado pelo Flex
+$(BUILD_DIR)/lex.yy.o: $(BUILD_DIR)/lex.yy.c $(BUILD_DIR)/parser.tab.h
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) -c -o $@ $(BUILD_DIR)/lex.yy.c
+
+# Gerar o lexer com Flex
+$(BUILD_DIR)/lex.yy.c: $(SRC_DIR)/lexer.l
+	$(LEX) -o $(BUILD_DIR)/lex.yy.c $(SRC_DIR)/lexer.l
+
+# Testar tokens do hello_world.mf
+tokens: $(TEST_TOKENS)
+	@echo "\n🔍 Analisando tokens de hello_world.mf..."
+	./$(TEST_TOKENS) $(TEST_DIR)/hello_world.mf
+
+# Testar com exemplos básicos
 test: $(TARGET)
-	@for f in $(TESTS)/*.mf; do \
-		echo ""; \
-		echo "========================================"; \
-		echo "Testando: $$f"; \
-		echo "========================================"; \
-		./$(TARGET) $$f || true; \
-	done
+	@echo "\n🧪 Testando hello_world.mf..."
+	./$(TARGET) $(TEST_DIR)/hello_world.mf
+	@echo "\n🧪 Testando variables.mf..."
+	./$(TARGET) $(TEST_DIR)/variables.mf
 
-lexer-test: $(LEXTEST)
-	./$(LEXTEST) $(TESTS)/hello_world.mf
+# Executar todos os testes
+test-all: $(TARGET)
+	@echo "========================================="
+	@echo "EXECUTANDO TODOS OS TESTES"
+	@echo "========================================="
+	@chmod +x run_tests.sh
+	@./run_tests.sh
 
-debug: CFLAGS += -DDEBUG
-debug: clean all
+# Executar testes e verificar sucesso
+test-check: $(TARGET)
+	@echo "🔍 Verificando todos os testes..."
+	@chmod +x run_tests.sh
+	@if ./run_tests.sh | grep -q "❌ Testes falhados: 0"; then \
+		echo "✅ Todos os testes passaram!"; \
+		exit 0; \
+	else \
+		echo "❌ Alguns testes falharam!"; \
+		exit 1; \
+	fi
 
+# Limpar arquivos gerados
+clean:
+	rm -rf $(BUILD_DIR) $(TARGET) $(TEST_TOKENS)
+	@echo "🧹 Arquivos limpos!"
+
+# Debug: imprimir variáveis
+debug:
+	@echo "CC       = $(CC)"
+	@echo "CFLAGS   = $(CFLAGS)"
+	@echo "LEX      = $(LEX)"
+	@echo "YACC     = $(YACC)"
+	@echo "TARGET   = $(TARGET)"
+	@echo "OBJS     = $(OBJS)"
+
+# Ajuda
 help:
+	@echo "========================================="
+	@echo "MAKEFILE - COMPILADOR DE LINGUAGEM MATEMÁTICA"
+	@echo "========================================="
+	@echo ""
 	@echo "Comandos disponíveis:"
-	@echo "  make all        - Compila o compilador"
-	@echo "  make clean      - Remove arquivos gerados"
-	@echo "  make test       - Executa suite de testes"
-	@echo "  make lexer-test - Testa o analisador léxico"
-	@echo "  make debug      - Compila com debug"
-	@echo "  make help       - Mostra esta mensagem"
+	@echo "  make all         - Compila o compilador completo"
+	@echo "  make tokens      - Compila test_tokens e analisa hello_world.mf"
+	@echo "  make test        - Testa hello_world.mf e variables.mf"
+	@echo "  make test-all    - Executa TODOS os testes (run_tests.sh)"
+	@echo "  make test-check  - Verifica se todos os testes passam (exit code)"
+	@echo "  make clean       - Remove arquivos compilados"
+	@echo "  make debug       - Mostra variáveis de configuração"
+	@echo "  make help        - Mostra esta mensagem"
+	@echo ""
+	@echo "Exemplos:"
+	@echo "  make clean && make all"
+	@echo "  make test-all"
+	@echo "  ./mathc tests/hello_world.mf"
+	@echo ""
+
+.PHONY: all test test-all test-check tokens clean debug help

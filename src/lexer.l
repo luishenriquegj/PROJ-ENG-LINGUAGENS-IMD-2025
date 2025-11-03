@@ -9,7 +9,7 @@ static int indent_stack[MAX_INDENT];
 static int indent_top = 0;
 static int pending_dedents = 0;
 static int at_bol = 1;
-static int inside_brackets = 0;  // Para ignorar indentação dentro de [], (), {}
+static int inside_brackets = 0;
 
 void push_indent(int level);
 int pop_indent(void);
@@ -32,22 +32,19 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 
 %%
 
-    /* ========================================================================== */
-    /* INDENTAÇÃO - Deve vir PRIMEIRO */
-    /* ========================================================================== */
 
-^[ \t]* {
+
+^[ \t]+ {
     if (at_bol && inside_brackets == 0) {
         int spaces = 0;
         for (int i = 0; yytext[i]; i++) {
             spaces += (yytext[i] == '\t') ? 4 : 1;
         }
-
         int level = spaces / 4;
-        at_bol = 0;
 
         if (level > current_indent()) {
             push_indent(level);
+            at_bol = 0;
             return INDENT;
         } else if (level < current_indent()) {
             while (level < current_indent() && indent_top > 0) {
@@ -57,38 +54,62 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
             if (pending_dedents > 0) {
                 pending_dedents--;
                 yyless(0);
+                at_bol = 1;
+                return DEDENT;
+            }
+        }
+        at_bol = 0;
+    }
+}
+
+^[^ \t\n] {
+    if (at_bol && inside_brackets == 0) {
+        int level = 0;
+        if (level < current_indent()) {
+            while (level < current_indent() && indent_top > 0) {
+                pop_indent();
+                pending_dedents++;
+            }
+            if (pending_dedents > 0) {
+                pending_dedents--;
+                yyless(0);
+                at_bol = 1;
                 return DEDENT;
             }
         }
     }
+    yyless(0);
+    at_bol = 0;
 }
 
 \n {
     at_bol = 1;
     if (inside_brackets > 0) {
-        /* Ignorar newlines dentro de colchetes/parênteses */
-    } else if (pending_dedents > 0) {
-        pending_dedents--;
-        yyless(1);
-        return DEDENT;
-    } else {
-        return NEWLINE;
     }
+    return NEWLINE;
 }
 
-    /* ========================================================================== */
-    /* COMENTÁRIOS */
-    /* ========================================================================== */
 
-"#".*           { /* Comentário de linha estilo Python */ }
-"/*"([^*]|"*"+[^*/])*"*"+"/" { /* Comentário de bloco */ }
-
-    /* ========================================================================== */
-    /* PALAVRAS-CHAVE */
-    /* ========================================================================== */
+"#".*           { }
 
 "def"       { return DEF; }
-"end"       { return END; }
+"end"       {
+    if (at_bol && inside_brackets == 0) {
+        if (current_indent() > 0) {
+            while (current_indent() > 0) {
+                pop_indent();
+                pending_dedents++;
+            }
+        }
+        if (pending_dedents > 0) {
+            pending_dedents--;
+            yyless(0);
+            at_bol = 1;
+            return DEDENT;
+        }
+    }
+    return END;
+}
 "fun"       { return FUN; }
 "if"        { return IF; }
 "elif"      { return ELIF; }
@@ -107,9 +128,6 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 "this"      { return THIS; }
 "new"       { return NEW; }
 
-    /* ========================================================================== */
-    /* TIPOS */
-    /* ========================================================================== */
 
 "int"       { return INT_TYPE; }
 "float"     { return FLOAT_TYPE; }
@@ -122,31 +140,27 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 "set"       { return SET_TYPE; }
 "graph"     { return GRAPH_TYPE; }
 
-    /* ========================================================================== */
-    /* LITERAIS BOOLEANOS */
-    /* ========================================================================== */
 
 "true"      { yylval.bval = 1; return TRUE; }
 "false"     { yylval.bval = 0; return FALSE; }
 
-    /* ========================================================================== */
-    /* OPERADORES LÓGICOS (palavras-chave) */
-    /* ========================================================================== */
 
 "and"       { return AND; }
 "or"        { return OR; }
 "not"       { return NOT; }
 
-    /* ========================================================================== */
-    /* FUNÇÕES BUILT-IN */
-    /* ========================================================================== */
 
 "print"     { return PRINT; }
 "range"     { return RANGE; }
+"sin"|"sen" { yylval.sval = strdup(yytext); return IDENTIFIER; }
+"cos"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
+"tan"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
+"sqrt"      { yylval.sval = strdup(yytext); return IDENTIFIER; }
+"abs"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
+"log"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
+"ln"        { yylval.sval = strdup(yytext); return IDENTIFIER; }
+"exp"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
 
-    /* ========================================================================== */
-    /* LITERAIS NUMÉRICOS */
-    /* ========================================================================== */
 
 {COMPLEX}   { yylval.sval = strdup(yytext); return COMPLEX_LITERAL; }
 {COMPLEX_I} { yylval.sval = strdup(yytext); return COMPLEX_LITERAL; }
@@ -154,9 +168,6 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 {FLOAT}     { yylval.fval = atof(yytext); return FLOAT_LITERAL; }
 {INT}       { yylval.ival = atoi(yytext); return INT_LITERAL; }
 
-    /* ========================================================================== */
-    /* STRINGS E CARACTERES */
-    /* ========================================================================== */
 
 \"([^\"\\]|\\.)*\" {
     yylval.sval = strndup(yytext + 1, yyleng - 2);
@@ -182,15 +193,9 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
     return CHAR_LITERAL;
 }
 
-    /* ========================================================================== */
-    /* IDENTIFICADORES */
-    /* ========================================================================== */
 
 {ID}        { yylval.sval = strdup(yytext); return IDENTIFIER; }
 
-    /* ========================================================================== */
-    /* OPERADORES - ORDEM IMPORTA! Mais longos primeiro */
-    /* ========================================================================== */
 
 "++"        { return INCREMENT; }
 "--"        { return DECREMENT; }
@@ -205,6 +210,7 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 ">="        { return GREATER_EQUAL; }
 "&&"        { return AND; }
 "||"        { return OR; }
+"//"        { return FLOOR_DIV; }
 
 "+"         { return PLUS; }
 "-"         { return MINUS; }
@@ -216,10 +222,8 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 "<"         { return LESS; }
 ">"         { return GREATER; }
 "="         { return ASSIGN; }
+"!"         { return NOT; }
 
-    /* ========================================================================== */
-    /* DELIMITADORES */
-    /* ========================================================================== */
 
 "("         { inside_brackets++; return LPAREN; }
 ")"         { inside_brackets--; return RPAREN; }
@@ -231,24 +235,16 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 ":"         { return COLON; }
 "."         { return DOT; }
 
-    /* ========================================================================== */
-    /* WHITESPACE (exceto newline) */
-    /* ========================================================================== */
 
-[ \t]+      { /* Ignorar */ }
 
-    /* ========================================================================== */
-    /* TRATAMENTO DE ERROS */
-    /* ========================================================================== */
+[ \t]+      {  }
+
 
 . {
     fprintf(stderr, "Erro léxico: caractere inválido '%c' (ASCII %d) na linha %d\n",
             yytext[0], yytext[0], yylineno);
 }
 
-    /* ========================================================================== */
-    /* EOF */
-    /* ========================================================================== */
 
 <<EOF>> {
     if (!at_bol) {

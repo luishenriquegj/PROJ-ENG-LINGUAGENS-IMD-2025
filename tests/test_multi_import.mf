@@ -1,0 +1,6 @@
+import io
+import math
+
+def fun void main()
+    print("test")
+end def

@@ -97,6 +97,7 @@ typedef struct ASTNode {
             TypeSpec* var_type;
             char* name;
             struct ASTNode* initializer;
+            int is_const;
         } declaration;
 
         struct {

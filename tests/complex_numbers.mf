@@ -18,4 +18,3 @@ def fun void main()
     print(soma)
     print(produto)
 end def
-

@@ -39,24 +39,19 @@ int main(int argc, char** argv) {
             printf("ÁRVORE SINTÁTICA ABSTRATA (AST)\n");
             printf("============================================================================\n\n");
 
-            // Contar nós para debug
             int node_count = count_ast_nodes(ast_root);
             printf("Total de nós na AST: %d\n\n", node_count);
 
-            // Imprimir a AST
             print_ast(ast_root, 0);
 
             printf("\n============================================================================\n");
 
-            // LIBERAR TODA A MEMÓRIA DA AST
             printf("\nLiberando memória da AST...\n");
             free_ast_tree(&ast_root);
             printf("Memória liberada com sucesso!\n");
         }
     } else {
         printf("\n✗ Análise sintática FALHOU!\n");
-
-        // Liberar AST parcial se existir
         if (ast_root) {
             free_ast_tree(&ast_root);
         }

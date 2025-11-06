@@ -18,6 +18,10 @@ static void print_indent(int level) {
 
 ASTNode* create_int_literal(int value, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó INT_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_INT_LITERAL;
     node->line = line;
     node->int_literal.value = value;
@@ -26,6 +30,10 @@ ASTNode* create_int_literal(int value, int line) {
 
 ASTNode* create_float_literal(double value, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó FLOAT_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_FLOAT_LITERAL;
     node->line = line;
     node->float_literal.value = value;
@@ -34,6 +42,10 @@ ASTNode* create_float_literal(double value, int line) {
 
 ASTNode* create_bool_literal(int value, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó BOOL_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_BOOL_LITERAL;
     node->line = line;
     node->bool_literal.value = value;
@@ -42,6 +54,10 @@ ASTNode* create_bool_literal(int value, int line) {
 
 ASTNode* create_complex_literal(char* value, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó COMPLEX_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_COMPLEX_LITERAL;
     node->line = line;
     node->complex_literal.value = strdup(value);
@@ -50,6 +66,10 @@ ASTNode* create_complex_literal(char* value, int line) {
 
 ASTNode* create_string_literal(char* value, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó STRING_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_STRING_LITERAL;
     node->line = line;
     node->string_literal.value = strdup(value);
@@ -58,6 +78,10 @@ ASTNode* create_string_literal(char* value, int line) {
 
 ASTNode* create_char_literal(char value, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó CHAR_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_CHAR_LITERAL;
     node->line = line;
     node->char_literal.value = value;
@@ -66,6 +90,10 @@ ASTNode* create_char_literal(char value, int line) {
 
 ASTNode* create_identifier(char* name, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó IDENTIFIER\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_IDENTIFIER;
     node->line = line;
     node->identifier.name = strdup(name);
@@ -78,6 +106,10 @@ ASTNode* create_identifier(char* name, int line) {
 
 ASTNode* create_binary_op(OperatorType op, ASTNode* left, ASTNode* right, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó BINARY_OP\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_BINARY_OP;
     node->line = line;
     node->binary_op.op = op;
@@ -88,6 +120,10 @@ ASTNode* create_binary_op(OperatorType op, ASTNode* left, ASTNode* right, int li
 
 ASTNode* create_unary_op(OperatorType op, ASTNode* operand, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó UNARY_OP\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_UNARY_OP;
     node->line = line;
     node->unary_op.op = op;
@@ -101,6 +137,10 @@ ASTNode* create_unary_op(OperatorType op, ASTNode* operand, int line) {
 
 ASTNode* create_call(ASTNode* function, NodeList* arguments, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó CALL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_CALL;
     node->line = line;
     node->call.function = function;
@@ -110,6 +150,10 @@ ASTNode* create_call(ASTNode* function, NodeList* arguments, int line) {
 
 ASTNode* create_array_access(ASTNode* array, ASTNode* index, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó ARRAY_ACCESS\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_ARRAY_ACCESS;
     node->line = line;
     node->array_access.array = array;
@@ -119,6 +163,10 @@ ASTNode* create_array_access(ASTNode* array, ASTNode* index, int line) {
 
 ASTNode* create_member_access(ASTNode* object, char* member, NodeList* args, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó MEMBER_ACCESS\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_MEMBER_ACCESS;
     node->line = line;
     node->member_access.object = object;
@@ -133,6 +181,10 @@ ASTNode* create_member_access(ASTNode* object, char* member, NodeList* args, int
 
 ASTNode* create_array_literal(NodeList* elements, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó ARRAY_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_ARRAY_LITERAL;
     node->line = line;
     node->array_literal.elements = elements;
@@ -141,6 +193,10 @@ ASTNode* create_array_literal(NodeList* elements, int line) {
 
 ASTNode* create_matrix_literal(NodeList* rows, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó MATRIX_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_MATRIX_LITERAL;
     node->line = line;
     node->matrix_literal.rows = rows;
@@ -149,6 +205,10 @@ ASTNode* create_matrix_literal(NodeList* rows, int line) {
 
 ASTNode* create_set_literal(NodeList* elements, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+            fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó SET_LITERAL\n");
+            exit(EXIT_FAILURE);
+        }
     node->type = NODE_SET_LITERAL;
     node->line = line;
     node->set_literal.elements = elements;
@@ -161,16 +221,30 @@ ASTNode* create_set_literal(NodeList* elements, int line) {
 
 ASTNode* create_declaration(TypeSpec* type, char* name, ASTNode* initializer, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para DECLARATION\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_DECLARATION;
     node->line = line;
     node->declaration.var_type = type;
     node->declaration.name = strdup(name);
+    if (!node->declaration.name) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nome da variável\n");
+        free(node);
+        exit(EXIT_FAILURE);
+    }
     node->declaration.initializer = initializer;
+    node->declaration.is_const = 0;  /* Default: não é const */
     return node;
 }
 
 ASTNode* create_assignment(ASTNode* target, OperatorType op, ASTNode* value, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para ASSIGNMENT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_ASSIGNMENT;
     node->line = line;
     node->assignment.target = target;
@@ -182,6 +256,10 @@ ASTNode* create_assignment(ASTNode* target, OperatorType op, ASTNode* value, int
 ASTNode* create_if_stmt(ASTNode* condition, NodeList* then_block,
                        NodeList* elif_parts, NodeList* else_block, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó IF_STMT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_IF_STMT;
     node->line = line;
     node->if_stmt.condition = condition;
@@ -193,6 +271,10 @@ ASTNode* create_if_stmt(ASTNode* condition, NodeList* then_block,
 
 ASTNode* create_while_stmt(ASTNode* condition, NodeList* body, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó WHILE_STMT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_WHILE_STMT;
     node->line = line;
     node->while_stmt.condition = condition;
@@ -203,6 +285,10 @@ ASTNode* create_while_stmt(ASTNode* condition, NodeList* body, int line) {
 ASTNode* create_for_stmt(char* iterator, char* index_var,
                         ASTNode* iterable, NodeList* body, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó FOR_STMT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_FOR_STMT;
     node->line = line;
     node->for_stmt.iterator = strdup(iterator);
@@ -214,6 +300,10 @@ ASTNode* create_for_stmt(char* iterator, char* index_var,
 
 ASTNode* create_return_stmt(ASTNode* value, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó RETURN_STMT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_RETURN_STMT;
     node->line = line;
     node->return_stmt.value = value;
@@ -222,6 +312,10 @@ ASTNode* create_return_stmt(ASTNode* value, int line) {
 
 ASTNode* create_break_stmt(int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó BREAK_STMT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_BREAK_STMT;
     node->line = line;
     return node;
@@ -229,6 +323,10 @@ ASTNode* create_break_stmt(int line) {
 
 ASTNode* create_continue_stmt(int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó CONTINUE_STMT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_CONTINUE_STMT;
     node->line = line;
     return node;
@@ -236,6 +334,10 @@ ASTNode* create_continue_stmt(int line) {
 
 ASTNode* create_expr_stmt(ASTNode* expression, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó EXPR_STMT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_EXPR_STMT;
     node->line = line;
     node->expr_stmt.expression = expression;
@@ -245,6 +347,10 @@ ASTNode* create_expr_stmt(ASTNode* expression, int line) {
 ASTNode* create_try_stmt(NodeList* try_block, NodeList* catch_clauses,
                         NodeList* finally_block, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó TRY_STMT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_TRY_STMT;
     node->line = line;
     node->try_stmt.try_block = try_block;
@@ -256,6 +362,10 @@ ASTNode* create_try_stmt(NodeList* try_block, NodeList* catch_clauses,
 ASTNode* create_catch_clause(TypeSpec* exception_type, char* var_name,
                              NodeList* body, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó CATCH_CLAUSE\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_CATCH_CLAUSE;
     node->line = line;
     node->catch_clause.exception_type = exception_type;
@@ -271,6 +381,10 @@ ASTNode* create_catch_clause(TypeSpec* exception_type, char* var_name,
 ASTNode* create_function_def(TypeSpec* return_type, char* name,
                             ParamList* parameters, NodeList* body, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó FUNCTION_DEF\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_FUNCTION_DEF;
     node->line = line;
     node->function_def.return_type = return_type;
@@ -282,6 +396,10 @@ ASTNode* create_function_def(TypeSpec* return_type, char* name,
 
 ASTNode* create_type_def(char* name, NodeList* members, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó TYPE_DEF\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_TYPE_DEF;
     node->line = line;
     node->type_def.name = strdup(name);
@@ -291,6 +409,10 @@ ASTNode* create_type_def(char* name, NodeList* members, int line) {
 
 ASTNode* create_import(char* module_name, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó IMPORT\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_IMPORT;
     node->line = line;
     node->import.module_name = strdup(module_name);
@@ -304,6 +426,10 @@ ASTNode* create_import(char* module_name, int line) {
 ASTNode* create_program(NodeList* imports, NodeList* definitions,
                        ASTNode* main_function, int line) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para nó PROGRAM\n");
+        exit(EXIT_FAILURE);
+    }
     node->type = NODE_PROGRAM;
     node->line = line;
     node->program.imports = imports;
@@ -318,6 +444,10 @@ ASTNode* create_program(NodeList* imports, NodeList* definitions,
 
 TypeSpec* create_type_spec(DataType base_type, TypeSpec* element_type, char* type_name) {
     TypeSpec* spec = (TypeSpec*)malloc(sizeof(TypeSpec));
+    if (!spec) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para TypeSpec\n");
+        exit(EXIT_FAILURE);
+    }
     spec->base_type = base_type;
     spec->element_type = element_type;
     spec->type_name = type_name ? strdup(type_name) : NULL;
@@ -326,6 +456,10 @@ TypeSpec* create_type_spec(DataType base_type, TypeSpec* element_type, char* typ
 
 NodeList* create_node_list(ASTNode* node, NodeList* next) {
     NodeList* list = (NodeList*)malloc(sizeof(NodeList));
+    if (!list) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para NodeList\n");
+        exit(EXIT_FAILURE);
+    }
     list->node = node;
     list->next = next;
     return list;
@@ -333,6 +467,10 @@ NodeList* create_node_list(ASTNode* node, NodeList* next) {
 
 ParamList* create_param_list(TypeSpec* type, char* name, ParamList* next) {
     ParamList* list = (ParamList*)malloc(sizeof(ParamList));
+    if (!list) {
+        fprintf(stderr, "ERRO FATAL: Falha ao alocar memória para ParamList\n");
+        exit(EXIT_FAILURE);
+    }
     list->type = type;
     list->name = strdup(name);
     list->next = next;

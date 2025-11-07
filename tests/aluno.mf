@@ -1,0 +1,85 @@
+import io
+
+def fun float media(float[] valores)
+    float soma = 0.0
+    int count = 0
+
+    for (v in valores)
+        soma += v
+        count++
+
+    return soma / count
+end def
+
+# Função fuzzy simples (sigmoid)
+def fun float risco_reprovacao(float media)
+    float x = 5.0 - media
+    return 1 / (1 + exp(-x))
+end def
+
+def fun void main()
+    float[] notas = [7.5, 8.0, 6.0, 9.0]
+
+    try
+        float m = media(notas)
+        print("Média calculada:")
+        print(m)
+    catch (int err)
+        print("Erro ao calcular média (talvez sem dados)")
+    finally
+        print("Cálculo de média concluído")
+
+    float risco = risco_reprovacao(m)
+
+    if (risco > 0.7)
+        print("Risco alto de reprovação")
+    elif (risco > 0.4)
+        print("Risco moderado")
+    else
+        print("Risco baixo")
+
+    print("Valor fuzzy do risco:")
+    print(risco)
+
+    matrix[int] atividades = [
+        [1,1,0],   # presença
+        [0,1,1],   # exercícios
+        [1,0,1]    # projetos
+    ]
+
+    int total = 0
+
+    for (linha in atividades)
+        for (elem in linha)
+            total += elem
+
+    print("Total de atividades realizadas:")
+    print(total)
+
+    # AVALIAÇÃO FINAL (COM DECISÃO)
+    if (m >= 7.0 and risco < 0.5)
+        print("Aluno aprovado")
+    elif (m >= 5.0)
+        print("Aluno em recuperação")
+    else
+        print("Aluno reprovado")
+
+    # CONJUNTO DE FALTAS (SET)
+    set[int] faltas = {2, 5, 9}
+    bool tem_falta_5 = 5 in faltas
+
+    if (tem_falta_5)
+        print("Aluno faltou no dia 5")
+    else
+        print("Aluno não faltou no dia 5")
+
+    # WHILE FINAL PARA CONTAGEM REGRESSIVA
+    int i = 5
+    while (i > 0)
+        print(i)
+        i--
+
+    print("Fim do programa realista.")
+
+    return 0
+end def

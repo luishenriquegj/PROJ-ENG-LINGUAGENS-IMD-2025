@@ -266,14 +266,14 @@ Para mais detalhes sobre instalação e uso, consulte o [Guia de Execução](GUI
 
 ## Testes
 
-O projeto inclui 15 arquivos de teste cobrindo todas as funcionalidades:
+O projeto inclui 28 arquivos de teste cobrindo todas as funcionalidades:
 
 ```bash
 # Executar todos os testes
 ./run_tests.sh
 
 # Resultado esperado:
-# ✅ Testes aprovados: 15
+# ✅ Testes aprovados: 28
 # ❌ Testes falhados: 0
 ```
 

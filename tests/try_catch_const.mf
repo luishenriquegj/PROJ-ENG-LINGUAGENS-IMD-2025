@@ -11,6 +11,7 @@ def fun int divide(int a, int b)
     finally
         print("Operacao finalizada")
 end def
+
 def fun void main()
     # Teste de try-catch-finally
     int resultado1 = divide(10, 2)

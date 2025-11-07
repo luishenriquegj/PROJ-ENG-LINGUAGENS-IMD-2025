@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 CC = gcc
 CFLAGS = -Wall -Wno-unused-function -g -D_GNU_SOURCE
 LEX = flex
@@ -11,14 +13,21 @@ TEST_DIR = tests
 # Arquivos de saída
 TARGET = mathc
 TEST_TOKENS = test_tokens
+
+# Objetos do compilador
 OBJS = $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o $(BUILD_DIR)/main.o
 
 # Criar diretório build
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Regra principal
-all: $(BUILD_DIR) $(TARGET)
+# Regra principal: compila o compilador e a ferramenta de tokens
+all: $(BUILD_DIR) $(TARGET) $(TEST_TOKENS)
+
+# Rebuild: clean + all
+rebuild:
+	@$(MAKE) -s clean
+	@$(MAKE) -s all
 
 # Gerar o executável final
 $(TARGET): $(OBJS)
@@ -56,18 +65,18 @@ $(BUILD_DIR)/lex.yy.c: $(SRC_DIR)/lexer.l
 
 # Testar tokens do hello_world.mf
 tokens: $(TEST_TOKENS)
-	@echo "\n🔍 Analisando tokens de hello_world.mf..."
+	@echo -e "\n🔍 Analisando tokens de hello_world.mf...\n"
 	./$(TEST_TOKENS) $(TEST_DIR)/hello_world.mf
 
 # Testar com exemplos básicos
 test: $(TARGET)
-	@echo "\n🧪 Testando hello_world.mf..."
+	@echo -e "\n🧪 Testando hello_world.mf..."
 	./$(TARGET) $(TEST_DIR)/hello_world.mf
-	@echo "\n🧪 Testando variables.mf..."
+	@echo -e "\n🧪 Testando variables.mf..."
 	./$(TARGET) $(TEST_DIR)/variables.mf
 
-# Executar todos os testes
-test-all: $(TARGET)
+# Executar todos os testes (script faz build se necessário)
+test-all:
 	@echo "========================================="
 	@echo "EXECUTANDO TODOS OS TESTES"
 	@echo "========================================="
@@ -75,7 +84,7 @@ test-all: $(TARGET)
 	@./run_tests.sh
 
 # Executar testes e verificar sucesso
-test-check: $(TARGET)
+test-check:
 	@echo "🔍 Verificando todos os testes..."
 	@chmod +x run_tests.sh
 	@if ./run_tests.sh | grep -q "❌ Testes falhados: 0"; then \
@@ -107,7 +116,8 @@ help:
 	@echo "========================================="
 	@echo ""
 	@echo "Comandos disponíveis:"
-	@echo "  make all         - Compila o compilador completo"
+	@echo "  make all         - Compila o compilador e a ferramenta de tokens"
+	@echo "  make rebuild     - Limpa e recompila tudo (clean + all)"
 	@echo "  make tokens      - Compila test_tokens e analisa hello_world.mf"
 	@echo "  make test        - Testa hello_world.mf e variables.mf"
 	@echo "  make test-all    - Executa TODOS os testes (run_tests.sh)"
@@ -117,9 +127,9 @@ help:
 	@echo "  make help        - Mostra esta mensagem"
 	@echo ""
 	@echo "Exemplos:"
-	@echo "  make clean && make all"
+	@echo "  make rebuild"
 	@echo "  make test-all"
 	@echo "  ./mathc tests/hello_world.mf"
 	@echo ""
 
-.PHONY: all test test-all test-check tokens clean debug help
+.PHONY: all rebuild test test-all test-check tokens clean debug help

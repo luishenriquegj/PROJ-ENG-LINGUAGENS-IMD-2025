@@ -1,78 +1,20 @@
-import math
+import io
 
-def fun int fibonacci(int n)
-    if (n <= 1)
-        return n
+def fun float media(int[] xs)
+    int n = 0
+    float acc = 0.0
+    for (v in xs)
+        acc = acc + v
+        n = n + 1
 
-    return fibonacci(n - 1) + fibonacci(n - 2)
-end def
+    if (n == 0)
+        return 0.0
 
-def fun float calcular_media(float[] notas)
-    float soma = 0.0
-    int count = 0
-
-    for (nota in notas)
-        soma += nota
-        count++
-
-    return soma / count
+    return acc / n
 end def
 
 def fun void main()
-    # Teste de literais
-    int x = 42
-    float y = 3.14
-    bool flag = true
-    complex z = 3+4i
-    string msg = "Olá, mundo!"
-    char ch = 'A'
-
-    # Teste de array
-    int[] numeros = [1, 2, 3, 4, 5]
-
-    # Teste de matriz
-    matrix[float] A = [[1.0, 2.0], [3.0, 4.0]]
-
-    # Teste de conjunto
-    set[int] primos = {2, 3, 5, 7, 11}
-
-    # Teste de operações
-    int resultado = x + 10 * 2
-    float potencia = y ^ 2
-
-    # Teste de if/elif/else
-    if (x > 50)
-        print("Maior que 50")
-    elif (x > 30)
-        print("Entre 30 e 50")
-    else
-        print("Menor ou igual a 30")
-
-    # Teste de while
-    int i = 0
-    while (i < 5)
-        print(i)
-        i++
-
-    # Teste de for
-    for (num in numeros)
-        print(num)
-
-    # Teste de chamada de função
-    int fib5 = fibonacci(5)
-    print(fib5)
-
-    # Teste de atribuição composta
-    x += 10
-    y *= 2
-
-    # Teste de try/catch
-    try
-        int divisao = 10 / 0
-    catch (int erro)
-        print("Erro de divisão")
-    finally
-        print("Finalizando")
-
-    return
+    int[] a = [10, 20, 30, 40]
+    float m = media(a)
+    print(m)
 end def

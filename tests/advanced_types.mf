@@ -1,15 +1,10 @@
 import io
 
 def fun void main()
-    # Teste de conjuntos
-    set[int] numeros = {1, 2, 3, 4, 5}
+    matrix[int] M
+    set[int] S = {1, 2, 3, 2}
+    graph[int] G
 
-    print(numeros)
-
-    # Operações com conjuntos - in está implementado
-    int x = 3
-    bool tem = x in numeros
-    print(tem)
-
-    print("Tipos avancados testados")
+    int[] arr = [1, 2, 3]
+    print(arr[0])
 end def

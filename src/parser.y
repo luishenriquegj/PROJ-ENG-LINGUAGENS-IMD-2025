@@ -217,8 +217,14 @@ indented_class_block
     ;
 
 class_member_list
-    : class_member { $$ = create_node_list($1, NULL); }
-    | class_member_list class_member { $$ = create_node_list($2, $1); }
+    : %empty { $$ = NULL; }
+    | class_member_list class_member {
+        if ($2) {
+            $$ = create_node_list($2, $1 ? $1 : NULL);
+        } else {
+            $$ = $1;
+        }
+    }
     ;
 
 class_member
@@ -247,6 +253,7 @@ primitive_type
 
 array_type
     : primitive_type LBRACKET RBRACKET { $$ = create_type_spec(TYPE_ARRAY, $1, NULL); }
+    | array_type LBRACKET RBRACKET { $$ = create_type_spec(TYPE_ARRAY, $1, NULL); }
     ;
 
 matrix_type
@@ -265,9 +272,16 @@ indented_block
     : INDENT statement_list { $$ = $2; }
     ;
 
+// Correção para blocos vazios
 statement_list
-    : statement { $$ = $1 ? create_node_list($1, NULL) : NULL; }
-    | statement_list statement { $$ = $2 ? create_node_list($2, $1) : $1; }
+    : %empty { $$ = NULL; }
+    | statement_list statement {
+        if ($2) {
+            $$ = create_node_list($2, $1 ? $1 : NULL);
+        } else {
+            $$ = $1;
+        }
+    }
     ;
 
 statement
@@ -325,16 +339,26 @@ if_stmt
 
 elif_chain
     : %empty { $$ = NULL; }
-    | elif_chain ELIF LPAREN expression RPAREN NEWLINE indented_block DEDENT {
-        NodeList* body = $7 ? reverse_node_list($7) : NULL;
-        ASTNode* e = create_if_stmt($4, body, NULL, NULL, yylineno);
-        $$ = create_node_list(e, $1);
+    | ELIF LPAREN expression RPAREN NEWLINE indented_block DEDENT elif_chain {
+        NodeList* body = $6 ? reverse_node_list($6) : NULL;
+        ASTNode* e = create_if_stmt($3, body, NULL, NULL, yylineno);
+        if ($8) {
+            NodeList* current = create_node_list(e, NULL);
+            NodeList* last = current;
+            while (last->next) last = last->next;
+            last->next = $8;
+            $$ = current;
+        } else {
+            $$ = create_node_list(e, NULL);
+        }
     }
     ;
 
 opt_else
     : %empty { $$ = NULL; }
-    | ELSE NEWLINE indented_block DEDENT { $$ = $3; }
+    | ELSE NEWLINE indented_block DEDENT {
+        $$ = $3 ? reverse_node_list($3) : NULL;
+    }
     ;
 
 while_stmt

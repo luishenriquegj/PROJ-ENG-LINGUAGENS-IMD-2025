@@ -1,13 +1,26 @@
 import io
 
 def fun void main()
-    int x = 42
-    float y = 3.14
-    bool flag = true
-    string msg = "Teste de variáveis"
+    int a = 10
+    float b = 3.14
+    bool c = true
+    complex z1 = 3+4i
+    complex z2 = 5j
+    char ch = 'A'
+    string s = "abcd\nxyz\tok"
 
-    print(msg)
-    print(x)
-    print(y)
-    print(flag)
+    a = a + 5
+    b = b * 2.0
+    c = not c
+    ch = 'Z'
+    s = s
+
+    int x
+    x = 42
+
+    const int PI = 314
+    print(a)
+    print(b)
+    print(c)
+    print(s)
 end def

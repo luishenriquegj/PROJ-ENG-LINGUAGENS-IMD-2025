@@ -1,51 +1,36 @@
 import io
 
 def fun void main()
-    # Teste de todos os operadores de atribuição
-    int x = 10
-    print(x)
+    int a = 10
+    int b = 3
+    int c = a + b - 2 * 5 / 1 % 2
 
-    x += 5
-    print(x)
+    a += 2
+    b -= 1
+    a *= 2
+    b /= 1
+    a %= 3
 
-    x -= 3
-    print(x)
+    bool p = (a < b) or (a == b) and not (a > b)
+    bool q = (a <= b) and (b >= 2) or (a != 0)
 
-    x *= 2
-    print(x)
+    a++
+    b--
+    ++a
+    --b
 
-    x /= 4
-    print(x)
+    int x = 2
+    int y = 3
+    int z = x ^ y
+    int m = x @ y
+    int f = a // b
 
-    x %= 5
-    print(x)
-
-    # Teste de incremento/decremento
-    int y = 0
-    y++
-    print(y)
-
-    ++y
-    print(y)
-
-    y--
-    print(y)
-
-    --y
-    print(y)
-
-    # Teste de operadores lógicos alternativos
-    bool a = true
-    bool b = false
-
-    bool c = a && b
+    print(a)
+    print(b)
     print(c)
-
-    bool d = a || b
-    print(d)
-
-    bool e = !a
-    print(e)
-
-    print("Todos os operadores testados")
+    print(p)
+    print(q)
+    print(z)
+    print(m)
+    print(f)
 end def

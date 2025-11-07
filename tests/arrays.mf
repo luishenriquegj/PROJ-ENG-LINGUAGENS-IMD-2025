@@ -1,9 +1,28 @@
 import io
 
 def fun void main()
-    int[] numeros = [1, 2, 3, 4, 5]
-    float[] valores = [1.1, 2.2, 3.3]
+    int[] arr = [1, 2, 3, 4, 5]
+    int[][] mat = [[1, 2], [3, 4], [5, 6]]
 
-    print(numeros)
-    print(valores)
+    int first = arr[0]
+    arr[1] = arr[1] + 10
+
+    int r0c1 = mat[0][1]
+    mat[2][0] = 9
+
+    set[int] S = {1, 2, 3, 2, 1}
+    print(first)
+    print(r0c1)
+end def
+
+def fun void sets()
+    set[int] S = {1,2,3,2}
+    int[] A = [1, 2, 3]
+    int[][] B = [[1,2],[3,4],[5,6]]
+
+    int x = A[1]
+    int y = B[2][0]
+    A[2] = x + y
+
+    print(A[2])
 end def

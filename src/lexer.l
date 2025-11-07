@@ -306,6 +306,8 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
     /* ignora espaços fora do BOL */
 }
 
+[ \r]+ { }
+
 <<EOF>> {
     while (pending_dedents > 0) { pending_dedents--; return DEDENT; }
     while (indent_top > 0) { pop_indent(); return DEDENT; }

@@ -7,49 +7,63 @@ echo "Teste de Validação Final"
 echo "========================================"
 echo ""
 
-TESTS=(
-    "tests/hello_world.mf"
-    "tests/variables.mf"
-    "tests/arrays.mf"
-    "tests/control.mf"
-    "tests/media.mf"
-    "tests/complex_functions.mf"
-    "tests/complex_numbers.mf"
-    "tests/math_functions.mf"
-    "tests/advanced_types.mf"
-    "tests/break_continue.mf"
-    "tests/try_catch_const.mf"
-    "tests/all_operators.mf"
-    "tests/special_literals.mf"
-    "tests/math_operators.mf"
-    "tests/complex_nested.mf"
-    "tests/aluno.mf"
-    "tests/conjuntos.mf"
-    "tests/soma_recursiva.mf"
-    "tests/teste_misturado.mf"
-    "tests/string_operations.mf"
-    "tests/mixed_type_operations.mf"
-)
+# Verifica se o diretório tests existe
+if [ ! -d "tests" ]; then
+    echo "❌ Diretório 'tests' não encontrado!"
+    exit 1
+fi
+
+# Encontra todos os arquivos .mf em tests (não recursivo)
+mapfile -t TEST_FILES < <(find tests -maxdepth 1 -type f -name "*.mf" | sort)
+
+if [ ${#TEST_FILES[@]} -eq 0 ]; then
+    echo "⚠️  Nenhum arquivo .mf encontrado em 'tests/'"
+    exit 1
+fi
 
 PASSED=0
 FAILED=0
+declare -a FAILED_DETAILS  # Array para armazenar detalhes dos falhos
 
-for test_file in "${TESTS[@]}"; do
-    if [ ! -f "$test_file" ]; then
-        echo "⚠️  Arquivo não encontrado: $test_file"
-        continue
+# Determina o comprimento máximo do nome base dos arquivos para alinhar a saída
+MAX_LEN=0
+for test_file in "${TEST_FILES[@]}"; do
+    base_name=$(basename "$test_file")
+    basename_len=${#base_name}
+    if (( basename_len > MAX_LEN )); then
+        MAX_LEN=$basename_len
     fi
+done
 
-    echo -n "Testando $(basename $test_file)... "
+if (( MAX_LEN < 20 )); then
+    MAX_LEN=20
+fi
 
-    output=$(./mathc "$test_file" 2>&1)
+# Cabeçalho da tabela de testes
+printf "%-${MAX_LEN}s  %s\n" "ARQUIVO" "RESULTADO"
+printf "%-${MAX_LEN}s  %s\n" "$(printf '%*s' $MAX_LEN | tr ' ' '-')" "--------"
 
-    if echo "$output" | grep -q "SUCESSO"; then
-        echo "✅ PASSOU"
-        ((PASSED++))
+for test_file in "${TEST_FILES[@]}"; do
+    base_name=$(basename "$test_file")
+    printf "%-${MAX_LEN}s  " "$base_name"
+
+    # Usa arquivo temporário para capturar saída exata
+    temp_out=$(mktemp)
+    if ./mathc "$test_file" >"$temp_out" 2>&1; then
+        # Compilador retornou 0 → sucesso?
+        if grep -q "SUCESSO" "$temp_out"; then
+            echo "✅ PASSOU"
+            ((PASSED++))
+        else
+            echo "❌ FALHOU"
+            ((FAILED++))
+            FAILED_DETAILS+=("$base_name|$temp_out")
+        fi
     else
+        # Compilador falhou (exit != 0) → falha
         echo "❌ FALHOU"
         ((FAILED++))
+        FAILED_DETAILS+=("$base_name|$temp_out")
     fi
 done
 
@@ -57,15 +71,26 @@ echo ""
 echo "========================================"
 echo "RESULTADO FINAL"
 echo "========================================"
-echo "✅ Testes aprovados: $PASSED"
-echo "❌ Testes falhados: $FAILED"
+printf "✅ Testes aprovados: %2d\n" $PASSED
+printf "❌ Testes falhados:  %2d\n" $FAILED
+printf "📄 Total de testes:  %2d\n" ${#TEST_FILES[@]}
 echo "========================================"
 
-if [ $FAILED -eq 0 ]; then
+if [ $FAILED -gt 0 ]; then
+    echo ""
+    echo "🔍 DETALHES DOS TESTES FALHOS:"
+    echo "========================================"
+    for detail in "${FAILED_DETAILS[@]}"; do
+        IFS='|' read -r file temp_file <<< "$detail"
+        echo ">️  Arquivo: $file"
+        echo "   ┌──────────────────────────────────────"
+        head -n 3 "$temp_file" | sed 's/^/   │ /'
+        echo "   └──────────────────────────────────────"
+        echo ""
+        rm -f "$temp_file"
+    done
+    exit 1
+else
     echo "🎉 TODOS OS TESTES PASSARAM!"
     exit 0
-else
-    echo "⚠️  Alguns testes falharam"
-    exit 1
 fi
-

@@ -1,0 +1,33 @@
+import io
+
+def fun void main()
+    try
+        int a = 5 / 0
+    catch (int e)
+        print("Erro 1 detectado")
+    finally
+        print("Finalizou bloco 1")
+
+    try
+        int b = "abc"
+    catch (int e)
+        print("Erro de tipo")
+    finally
+        print("Finalizou bloco 2")
+
+
+    while (i < 5)
+        print(i)
+
+    int x = 5
+    float y = x + 0.5
+    print(y)
+
+    while(i<=10)
+        if(i==0)
+            print(i)
+        else
+            print(0)
+
+    return 0
+end def

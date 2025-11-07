@@ -2,3 +2,5 @@ build
 *.o
 lexer
 *.yy.c
+mathc
+test_tokens

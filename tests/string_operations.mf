@@ -1,0 +1,31 @@
+import io
+
+def fun void main()
+    # String literals
+    string hello = "Hello, World!"
+    string empty = ""
+    string with_escapes = "Line 1\nLine 2\tTabbed"
+    string with_quotes = "He said \"Hello\""
+    
+    # String in conditions
+    string test = "test"
+    if (test == "test")
+        print("String comparison works")
+    
+    # String concatenation (if supported)
+    string first = "Hello"
+    string second = "World"
+    
+    # Array of strings
+    string[] messages = ["Error", "Warning", "Info"]
+    
+    for (msg in messages)
+        print(msg)
+    
+    # Multi-line concepts (if supported with escapes)
+    string multiline = "First line\nSecond line\nThird line"
+    print(multiline)
+    
+    # Special characters
+    string special = "\n\t\\\'\""
+end def

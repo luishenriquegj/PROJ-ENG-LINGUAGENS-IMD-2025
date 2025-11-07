@@ -23,6 +23,8 @@ TESTS=(
     "tests/special_literals.mf"
     "tests/math_operators.mf"
     "tests/complex_nested.mf"
+    "tests/string_operations.mf"
+    "tests/mixed_type_operations.mf"
 )
 
 PASSED=0

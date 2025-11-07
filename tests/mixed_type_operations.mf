@@ -1,0 +1,62 @@
+import io
+import math
+
+# Deep recursion
+def fun int factorial(int n)
+    if (n <= 1)
+        return 1
+    return n * factorial(n - 1)
+end def
+
+# Many parameters
+def fun int sum_five(int a, int b, int c, int d, int e)
+    return a + b + c + d + e
+end def
+
+def fun void main()
+    # Long expression
+    int complex_expr = ((10 + 20) * (30 - 15) / 5 + 100) % 50 ^ 2 // 3
+    
+    # Many variables
+    int v1 = 1
+    int v2 = 2
+    int v3 = 3
+    int v4 = 4
+    int v5 = 5
+    int v6 = 6
+    int v7 = 7
+    int v8 = 8
+    int v9 = 9
+    int v10 = 10
+    
+    # Deep nesting
+    if (v1 > 0)
+        if (v2 > 0)
+            if (v3 > 0)
+                if (v4 > 0)
+                    if (v5 > 0)
+                        print("Deep nesting works")
+    
+    # Many sequential operations
+    int acc = 0
+    acc += 1
+    acc += 2
+    acc += 3
+    acc += 4
+    acc += 5
+    acc *= 2
+    acc -= 10
+    acc /= 2
+    acc %= 7
+    
+    # Large array
+    int[] large = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    
+    # Multiple function calls
+    int fact5 = factorial(5)
+    int sum_result = sum_five(1, 2, 3, 4, 5)
+    
+    print(fact5)
+    print(sum_result)
+    print(acc)
+end def

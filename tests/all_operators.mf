@@ -49,4 +49,3 @@ def fun void main()
 
     print("Todos os operadores testados")
 end def
-

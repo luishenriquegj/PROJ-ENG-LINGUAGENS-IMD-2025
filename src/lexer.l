@@ -5,15 +5,79 @@
 #include "parser.tab.h"
 
 #define MAX_INDENT 100
+#define LINEBUF_MAX 8192
+#define TOKBUF_MAX 512
+
 static int indent_stack[MAX_INDENT];
 static int indent_top = 0;
 static int pending_dedents = 0;
 static int at_bol = 1;
 static int inside_brackets = 0;
 
+static int curr_col = 0;
+static int tok_line = 1;
+static int tok_col = 1;
+static int tok_len = 0;
+
+static char linebuf[LINEBUF_MAX];
+static int  linebuf_len = 0;
+static char tokbuf[TOKBUF_MAX];
+
 void push_indent(int level);
 int pop_indent(void);
 int current_indent(void);
+
+static void linebuf_clear(void) { linebuf[0] = '\0'; linebuf_len = 0; }
+static void linebuf_append_escaped(const char* s, int n) {
+    if (n < 0) n = (int)strlen(s);
+    for (int i = 0; i < n; i++) {
+        char c = s[i];
+        const char* esc = NULL;
+        switch (c) {
+            case '\n': esc = "\\n"; break;
+            case '\t': esc = "\\t"; break;
+            case '\r': esc = "\\r"; break;
+            default: esc = NULL; break;
+        }
+        if (esc) {
+            int el = (int)strlen(esc);
+            if (linebuf_len + el < LINEBUF_MAX-1) {
+                memcpy(linebuf + linebuf_len, esc, el);
+                linebuf_len += el;
+            }
+        } else {
+            if (linebuf_len + 1 < LINEBUF_MAX-1) {
+                linebuf[linebuf_len++] = c;
+            }
+        }
+    }
+    linebuf[linebuf_len] = '\0';
+}
+static void tokbuf_set_escaped(const char* s, int n) {
+    int p = 0;
+    if (n < 0) n = (int)strlen(s);
+    for (int i = 0; i < n && p < TOKBUF_MAX-2; i++) {
+        char c = s[i];
+        if (c == '\n') { if (p < TOKBUF_MAX-2) { tokbuf[p++]='\\'; tokbuf[p++]='n'; } }
+        else if (c == '\t') { if (p < TOKBUF_MAX-2) { tokbuf[p++]='\\'; tokbuf[p++]='t'; } }
+        else if (c == '\r') { if (p < TOKBUF_MAX-2) { tokbuf[p++]='\\'; tokbuf[p++]='r'; } }
+        else tokbuf[p++] = c;
+    }
+    tokbuf[p] = '\0';
+}
+
+const char* lex_current_line(void) { return linebuf; }
+int lex_tok_line(void) { return tok_line; }
+int lex_tok_col(void) { return tok_col; }
+int lex_tok_len(void) { return tok_len; }
+const char* lex_tok_text(void) { return tokbuf; }
+
+#define RETTOK(TK) do { \
+    tok_line = yylineno; tok_col = curr_col + 1; tok_len = yyleng; \
+    tokbuf_set_escaped(yytext, yyleng); \
+    curr_col += yyleng; linebuf_append_escaped(yytext, yyleng); \
+    return (TK); \
+} while(0)
 %}
 
 %option noyywrap
@@ -22,8 +86,8 @@ int current_indent(void);
 %option noinput
 
 DIGIT       [0-9]
-LETTER      [a-zA-Z]
-ID          {LETTER}({LETTER}|{DIGIT}|_)*
+LETTER      [a-zA-Z_]
+ID          {LETTER}({LETTER}|{DIGIT})*
 INT         {DIGIT}+
 FLOAT       {DIGIT}+\.{DIGIT}+
 SCIENTIFIC  ({INT}|{FLOAT})[eE][+-]?{DIGIT}+
@@ -32,20 +96,16 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 
 %%
 
-
-
 ^[ \t]+ {
     if (at_bol && inside_brackets == 0) {
         int spaces = 0;
-        for (int i = 0; yytext[i]; i++) {
-            spaces += (yytext[i] == '\t') ? 4 : 1;
-        }
+        for (int i = 0; yytext[i]; i++) spaces += (yytext[i] == '\t') ? 8 : 1;
         int level = spaces / 4;
 
         if (level > current_indent()) {
             push_indent(level);
             at_bol = 0;
-            return INDENT;
+            RETTOK(INDENT);
         } else if (level < current_indent()) {
             while (level < current_indent() && indent_top > 0) {
                 pop_indent();
@@ -53,12 +113,19 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
             }
             if (pending_dedents > 0) {
                 pending_dedents--;
+                tok_line = yylineno; tok_col = curr_col + 1; tok_len = 0;
+                tokbuf_set_escaped("", 0);
                 yyless(0);
                 at_bol = 1;
                 return DEDENT;
             }
         }
         at_bol = 0;
+        tok_line = yylineno; tok_col = curr_col + 1; tok_len = yyleng;
+        tokbuf_set_escaped(yytext, yyleng);
+        curr_col += yyleng;
+        linebuf_append_escaped(yytext, yyleng);
+        /* não retorna token */
     }
 }
 
@@ -72,6 +139,8 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
             }
             if (pending_dedents > 0) {
                 pending_dedents--;
+                tok_line = yylineno; tok_col = curr_col + 1; tok_len = 0;
+                tokbuf_set_escaped("", 0);
                 yyless(0);
                 at_bol = 1;
                 return DEDENT;
@@ -83,16 +152,26 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 }
 
 \n {
-    at_bol = 1;
-    if (inside_brackets > 0) {
+    if (inside_brackets == 0) {
+        at_bol = 1;
+        tok_line = yylineno; tok_col = curr_col + 1; tok_len = 2;
+        tokbuf_set_escaped("\\n", 2);
+        curr_col = 0;
+        linebuf_clear();
+        return NEWLINE;
     }
-    return NEWLINE;
 }
 
+"#".* {
+    tok_line = yylineno; tok_col = curr_col + 1; tok_len = yyleng;
+    tokbuf_set_escaped(yytext, yyleng);
+    curr_col += yyleng;
+    linebuf_append_escaped(yytext, yyleng);
+    /* ignora comentário */
+}
 
-"#".*           { }
+"def"       { at_bol = 0; RETTOK(DEF); }
 
-"def"       { return DEF; }
 "end"       {
     if (at_bol && inside_brackets == 0) {
         if (current_indent() > 0) {
@@ -103,81 +182,107 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
         }
         if (pending_dedents > 0) {
             pending_dedents--;
+            tok_line = yylineno; tok_col = curr_col + 1; tok_len = 0;
+            tokbuf_set_escaped("", 0);
             yyless(0);
             at_bol = 1;
             return DEDENT;
         }
     }
-    return END;
+    at_bol = 0; RETTOK(END);
 }
-"fun"       { return FUN; }
-"if"        { return IF; }
-"elif"      { return ELIF; }
-"else"      { return ELSE; }
-"while"     { return WHILE; }
-"for"       { return FOR; }
-"in"        { return IN; }
-"return"    { return RETURN; }
-"break"     { return BREAK; }
-"continue"  { return CONTINUE; }
-"try"       { return TRY; }
-"catch"     { return CATCH; }
-"finally"   { return FINALLY; }
-"import"    { return IMPORT; }
-"const"     { return CONST; }
-"this"      { return THIS; }
-"new"       { return NEW; }
 
+"fun"       { at_bol = 0; RETTOK(FUN); }
+"class"     { at_bol = 0; RETTOK(CLASS); }
+"import"    { at_bol = 0; RETTOK(IMPORT); }
+"const"     { at_bol = 0; RETTOK(CONST); }
 
-"int"       { return INT_TYPE; }
-"float"     { return FLOAT_TYPE; }
-"bool"      { return BOOL_TYPE; }
-"complex"   { return COMPLEX_TYPE; }
-"char"      { return CHAR_TYPE; }
-"string"    { return STRING_TYPE; }
-"void"      { return VOID_TYPE; }
-"matrix"    { return MATRIX_TYPE; }
-"set"       { return SET_TYPE; }
-"graph"     { return GRAPH_TYPE; }
+"if"        { at_bol = 0; RETTOK(IF); }
+"elif"      { at_bol = 0; RETTOK(ELIF); }
+"else"      { at_bol = 0; RETTOK(ELSE); }
+"while"     { at_bol = 0; RETTOK(WHILE); }
+"for"       { at_bol = 0; RETTOK(FOR); }
+"in"        { at_bol = 0; RETTOK(IN); }
+"return"    { at_bol = 0; RETTOK(RETURN); }
+"break"     { at_bol = 0; RETTOK(BREAK); }
+"continue"  { at_bol = 0; RETTOK(CONTINUE); }
+"try"       { at_bol = 0; RETTOK(TRY); }
+"catch"     { at_bol = 0; RETTOK(CATCH); }
+"finally"   { at_bol = 0; RETTOK(FINALLY); }
 
+"int"       { at_bol = 0; RETTOK(INT_TYPE); }
+"float"     { at_bol = 0; RETTOK(FLOAT_TYPE); }
+"bool"      { at_bol = 0; RETTOK(BOOL_TYPE); }
+"complex"   { at_bol = 0; RETTOK(COMPLEX_TYPE); }
+"char"      { at_bol = 0; RETTOK(CHAR_TYPE); }
+"string"    { at_bol = 0; RETTOK(STRING_TYPE); }
+"void"      { at_bol = 0; RETTOK(VOID_TYPE); }
+"matrix"    { at_bol = 0; RETTOK(MATRIX_TYPE); }
+"set"       { at_bol = 0; RETTOK(SET_TYPE); }
+"graph"     { at_bol = 0; RETTOK(GRAPH_TYPE); }
 
-"true"      { yylval.bval = 1; return TRUE; }
-"false"     { yylval.bval = 0; return FALSE; }
+"true"      { at_bol = 0; yylval.bval = 1; RETTOK(TRUE); }
+"false"     { at_bol = 0; yylval.bval = 0; RETTOK(FALSE); }
 
+"and"       { at_bol = 0; RETTOK(AND); }
+"or"        { at_bol = 0; RETTOK(OR); }
+"not"       { at_bol = 0; RETTOK(NOT); }
 
-"and"       { return AND; }
-"or"        { return OR; }
-"not"       { return NOT; }
+"this"      { at_bol = 0; RETTOK(THIS); }
+"new"       { at_bol = 0; RETTOK(NEW); }
+"print"     { at_bol = 0; RETTOK(PRINT); }
+"range"     { at_bol = 0; RETTOK(RANGE); }
 
+"=="        { at_bol = 0; RETTOK(EQUAL); }
+"!="        { at_bol = 0; RETTOK(NOT_EQUAL); }
+"<="        { at_bol = 0; RETTOK(LESS_EQUAL); }
+">="        { at_bol = 0; RETTOK(GREATER_EQUAL); }
+"&&"        { at_bol = 0; RETTOK(AND); }
+"||"        { at_bol = 0; RETTOK(OR); }
+"//"        { at_bol = 0; RETTOK(FLOOR_DIV); }
+"+="        { at_bol = 0; RETTOK(PLUS_ASSIGN); }
+"-="        { at_bol = 0; RETTOK(MINUS_ASSIGN); }
+"*="        { at_bol = 0; RETTOK(STAR_ASSIGN); }
+"/="        { at_bol = 0; RETTOK(SLASH_ASSIGN); }
+"%="        { at_bol = 0; RETTOK(MOD_ASSIGN); }
+"++"        { at_bol = 0; RETTOK(INCREMENT); }
+"--"        { at_bol = 0; RETTOK(DECREMENT); }
+"+"         { at_bol = 0; RETTOK(PLUS); }
+"-"         { at_bol = 0; RETTOK(MINUS); }
+"*"         { at_bol = 0; RETTOK(STAR); }
+"/"         { at_bol = 0; RETTOK(SLASH); }
+"%"         { at_bol = 0; RETTOK(MOD); }
+"^"         { at_bol = 0; RETTOK(POWER); }
+"@"         { at_bol = 0; RETTOK(MATMUL); }
+"<"         { at_bol = 0; RETTOK(LESS); }
+">"         { at_bol = 0; RETTOK(GREATER); }
+"="         { at_bol = 0; RETTOK(ASSIGN); }
+"!"         { at_bol = 0; RETTOK(NOT); }
 
-"print"     { return PRINT; }
-"range"     { return RANGE; }
-"sin"|"sen" { yylval.sval = strdup(yytext); return IDENTIFIER; }
-"cos"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
-"tan"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
-"sqrt"      { yylval.sval = strdup(yytext); return IDENTIFIER; }
-"abs"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
-"log"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
-"ln"        { yylval.sval = strdup(yytext); return IDENTIFIER; }
-"exp"       { yylval.sval = strdup(yytext); return IDENTIFIER; }
+"("         { at_bol = 0; inside_brackets++; RETTOK(LPAREN); }
+")"         { at_bol = 0; if (inside_brackets>0) inside_brackets--; RETTOK(RPAREN); }
+"["         { at_bol = 0; inside_brackets++; RETTOK(LBRACKET); }
+"]"         { at_bol = 0; if (inside_brackets>0) inside_brackets--; RETTOK(RBRACKET); }
+"{"         { at_bol = 0; inside_brackets++; RETTOK(LBRACE); }
+"}"         { at_bol = 0; if (inside_brackets>0) inside_brackets--; RETTOK(RBRACE); }
+","         { at_bol = 0; RETTOK(COMMA); }
+":"         { at_bol = 0; RETTOK(COLON); }
+"."         { at_bol = 0; RETTOK(DOT); }
 
-
-{COMPLEX}   { yylval.sval = strdup(yytext); return COMPLEX_LITERAL; }
-{COMPLEX_I} { yylval.sval = strdup(yytext); return COMPLEX_LITERAL; }
-{SCIENTIFIC} { yylval.fval = atof(yytext); return FLOAT_LITERAL; }
-{FLOAT}     { yylval.fval = atof(yytext); return FLOAT_LITERAL; }
-{INT}       { yylval.ival = atoi(yytext); return INT_LITERAL; }
-
+{COMPLEX}    { at_bol = 0; yylval.sval = strdup(yytext); RETTOK(COMPLEX_LITERAL); }
+{COMPLEX_I}  { at_bol = 0; yylval.sval = strdup(yytext); RETTOK(COMPLEX_LITERAL); }
+{SCIENTIFIC} { at_bol = 0; yylval.fval = atof(yytext); RETTOK(FLOAT_LITERAL); }
+{FLOAT}      { at_bol = 0; yylval.fval = atof(yytext); RETTOK(FLOAT_LITERAL); }
+{INT}        { at_bol = 0; yylval.ival = atoi(yytext); RETTOK(INT_LITERAL); }
 
 \"([^\"\\]|\\.)*\" {
-    yylval.sval = strndup(yytext + 1, yyleng - 2);
-    return STRING_LITERAL;
+    at_bol = 0; yylval.sval = strndup(yytext+1, yyleng-2); RETTOK(STRING_LITERAL);
 }
 
 \'([^\'\\]|\\.)?\' {
-    if (yyleng == 3) {
-        yylval.cval = yytext[1];
-    } else if (yyleng == 4 && yytext[1] == '\\') {
+    at_bol = 0;
+    if (yyleng == 3) yylval.cval = yytext[1];
+    else if (yyleng == 4 && yytext[1] == '\\') {
         switch (yytext[2]) {
             case 'n': yylval.cval = '\n'; break;
             case 't': yylval.cval = '\t'; break;
@@ -185,95 +290,46 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
             case '\\': yylval.cval = '\\'; break;
             case '\'': yylval.cval = '\''; break;
             case '0': yylval.cval = '\0'; break;
-            default: yylval.cval = yytext[2];
+            default: yylval.cval = yytext[2]; break;
         }
-    } else {
-        yylval.cval = '\0';
-    }
-    return CHAR_LITERAL;
+    } else yylval.cval = '\0';
+    RETTOK(CHAR_LITERAL);
 }
 
+{ID}        { at_bol = 0; yylval.sval = strdup(yytext); RETTOK(IDENTIFIER); }
 
-{ID}        { yylval.sval = strdup(yytext); return IDENTIFIER; }
-
-
-"++"        { return INCREMENT; }
-"--"        { return DECREMENT; }
-"+="        { return PLUS_ASSIGN; }
-"-="        { return MINUS_ASSIGN; }
-"*="        { return STAR_ASSIGN; }
-"/="        { return SLASH_ASSIGN; }
-"%="        { return MOD_ASSIGN; }
-"=="        { return EQUAL; }
-"!="        { return NOT_EQUAL; }
-"<="        { return LESS_EQUAL; }
-">="        { return GREATER_EQUAL; }
-"&&"        { return AND; }
-"||"        { return OR; }
-"//"        { return FLOOR_DIV; }
-
-"+"         { return PLUS; }
-"-"         { return MINUS; }
-"*"         { return STAR; }
-"/"         { return SLASH; }
-"%"         { return MOD; }
-"^"         { return POWER; }
-"@"         { return MATMUL; }
-"<"         { return LESS; }
-">"         { return GREATER; }
-"="         { return ASSIGN; }
-"!"         { return NOT; }
-
-
-"("         { inside_brackets++; return LPAREN; }
-")"         { inside_brackets--; return RPAREN; }
-"["         { inside_brackets++; return LBRACKET; }
-"]"         { inside_brackets--; return RBRACKET; }
-"{"         { inside_brackets++; return LBRACE; }
-"}"         { inside_brackets--; return RBRACE; }
-","         { return COMMA; }
-":"         { return COLON; }
-"."         { return DOT; }
-
-
-
-[ \t]+      {  }
-
-
-. {
-    fprintf(stderr, "Erro léxico: caractere inválido '%c' (ASCII %d) na linha %d\n",
-            yytext[0], yytext[0], yylineno);
+[ \t]+ {
+    tok_line = yylineno; tok_col = curr_col + 1; tok_len = yyleng;
+    tokbuf_set_escaped(yytext, yyleng);
+    curr_col += yyleng;
+    linebuf_append_escaped(yytext, yyleng);
+    /* ignora espaços fora do BOL */
 }
-
 
 <<EOF>> {
-    if (!at_bol) {
-        at_bol = 1;
-        yyless(0);
-        return NEWLINE;
-    }
-    while (indent_top > 0) {
-        pop_indent();
-        return DEDENT;
-    }
+    while (pending_dedents > 0) { pending_dedents--; return DEDENT; }
+    while (indent_top > 0) { pop_indent(); return DEDENT; }
     return 0;
 }
 
+. {
+    char esc[8];
+    if (yytext[0] == '\n') strcpy(esc, "\\n");
+    else if (yytext[0] == '\t') strcpy(esc, "\\t");
+    else if (yytext[0] == '\r') strcpy(esc, "\\r");
+    else { esc[0] = yytext[0]; esc[1] = '\0'; }
+    fprintf(stderr, "Erro léxico na linha %d, col %d: caractere inválido '%s'\n",
+            yylineno, curr_col+1, esc);
+}
 %%
 
 void push_indent(int level) {
-    if (indent_top < MAX_INDENT - 1) {
-        indent_stack[++indent_top] = level;
-    }
+    if (indent_top < MAX_INDENT - 1) indent_stack[++indent_top] = level;
 }
-
 int pop_indent(void) {
-    if (indent_top > 0) {
-        return indent_stack[indent_top--];
-    }
+    if (indent_top > 0) return indent_stack[indent_top--];
     return 0;
 }
-
 int current_indent(void) {
     return (indent_top > 0) ? indent_stack[indent_top] : 0;
 }

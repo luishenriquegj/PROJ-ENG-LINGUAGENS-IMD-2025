@@ -1,0 +1,53 @@
+import io
+
+def fun void mergeSort()
+    if(lista.length <= 1)
+        return
+
+    int[] esquerda = []
+    int[] direita  = []
+
+
+    for (num in lista)
+        if(index < lista.length() / 2)
+            esquerda.add(num)
+        else
+            direita.add(num)
+
+
+    mergeSort(esquerda)
+    mergeSort(direita)
+
+
+    lista.c()
+    merge(lista, esquerda, direita)
+end def
+
+def fun void merge()
+    while(not esquerda.isEmpty() and not direita.isEmpty())
+        if(esquerda[1] <= direita[1])
+            resultado.add(esquerda[1])
+            esquerda.remove(1)
+        else
+            resultado.add(direita[1])
+            direita.remove(1)
+
+
+    while (not esquerda.isEmpty())
+        resultado.add(esquerda[1])
+        esquerda.remove(1)
+
+
+    while (not direita.isEmpty())
+        resultado.add(direita[1])
+        direita.remove(1)
+
+end def
+
+def fun void main()
+    int[] lista = [6940, 3041, 2545, 2472, 4011, 5486, 8618, 2751, 7025, 6156, 9079, 2209,6130, 8327, 5571, 4949, 6579, 5950, 468, 2522]
+
+    mergeSort(lista)
+
+    print(lista)
+end def

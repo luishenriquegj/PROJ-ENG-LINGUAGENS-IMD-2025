@@ -23,6 +23,10 @@ TESTS=(
     "tests/special_literals.mf"
     "tests/math_operators.mf"
     "tests/complex_nested.mf"
+    "tests/aluno.mf"
+    "tests/conjuntos.mf"
+    "tests/soma_recursiva.mf"
+    "tests/teste_misturado.mf"
     "tests/string_operations.mf"
     "tests/mixed_type_operations.mf"
 )

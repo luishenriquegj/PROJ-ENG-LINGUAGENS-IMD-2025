@@ -50,4 +50,3 @@ def fun void main()
 
     print("Operadores matematicos especiais testados")
 end def
-

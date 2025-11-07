@@ -1,0 +1,6 @@
+import io
+
+def fun void main()
+    int i = 0
+    i++
+end def

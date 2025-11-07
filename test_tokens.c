@@ -1,15 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "parser.tab.h"
 
 extern FILE* yyin;
 extern int yylex();
-extern int yylineno;
-extern char* yytext;
 
-const char* token_name(int token) {
-    switch(token) {
+extern const char* lex_current_line(void);
+extern int lex_tok_line(void);
+extern int lex_tok_col(void);
+extern int lex_tok_len(void);
+extern const char* lex_tok_text(void);
+
+static const char* token_name(int token) {
+    switch (token) {
         case DEF: return "DEF";
         case END: return "END";
         case FUN: return "FUN";
@@ -29,6 +32,8 @@ const char* token_name(int token) {
         case CONST: return "CONST";
         case THIS: return "THIS";
         case NEW: return "NEW";
+        case PRINT: return "PRINT";
+        case RANGE: return "RANGE";
         case INT_TYPE: return "INT_TYPE";
         case FLOAT_TYPE: return "FLOAT_TYPE";
         case BOOL_TYPE: return "BOOL_TYPE";
@@ -44,8 +49,6 @@ const char* token_name(int token) {
         case AND: return "AND";
         case OR: return "OR";
         case NOT: return "NOT";
-        case PRINT: return "PRINT";
-        case RANGE: return "RANGE";
         case PLUS: return "PLUS";
         case MINUS: return "MINUS";
         case STAR: return "STAR";
@@ -100,17 +103,21 @@ int main(int argc, char** argv) {
     }
 
     printf("=== ANÁLISE LÉXICA (TOKENS) ===\n");
-    printf("%-5s %-20s %-30s\n", "Linha", "Token", "Lexema");
+    printf("%-5s %-5s %-18s %-30s\n", "Linha", "Col", "Token", "Lexema");
     printf("---------------------------------------------------------------\n");
 
-    int token;
-    while ((token = yylex()) != 0) {
-        printf("%-5d %-20s '%s'\n", yylineno, token_name(token), yytext);
+    int tk;
+    while ((tk = yylex()) != 0) {
+        int line = lex_tok_line();
+        int col  = lex_tok_col();
+        const char* tname = token_name(tk);
+        const char* text  = lex_tok_text();
+        if (!text) text = "";
+        printf("%-5d %-5d %-18s '%s'\n", line, col, tname, text);
     }
 
     if (argc > 1) {
         fclose(yyin);
     }
-
     return 0;
 }

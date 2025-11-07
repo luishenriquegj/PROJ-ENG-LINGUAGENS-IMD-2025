@@ -38,4 +38,3 @@ def fun void main()
     print(modulo)
     print(potencia)
 end def
-

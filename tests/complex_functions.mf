@@ -41,4 +41,3 @@ def fun void main()
     float[] seq = generate_sequence(10)
     print(seq)
 end def
-

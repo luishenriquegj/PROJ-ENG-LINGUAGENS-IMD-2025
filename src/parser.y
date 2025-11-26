@@ -3,10 +3,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "../libs/symbol-table.h"
+#include "../libs/stack.h"
 
 extern int yylex();
 extern int yylineno;
 void yyerror(const char* s);
+
+extern SymbolTable *symbol_table;
+extern FILE * yyin, * yyout;
+
+void undeclared_variable_error(const char* var_name, int line);
+void already_declared_variable_error(char* var_name, int line);
+void type_error(char* t1, char* t2, int line);
+char *cat(char *t1, char *t2, char *t3, char *t4, char *t5);
+void check_variables(const char* var_name, int line);
+void vars_routine(ASTNode* node);
+int count_params(ParamList *p);
+int count_nodelist(NodeList *n);
+
+static char buffer[256];
+const char* datatype_to_string(DataType t);
+const char* datatype_to_string_full(TypeSpec* t);
 
 extern const char* lex_current_line(void);
 extern int lex_tok_line(void);
@@ -180,11 +198,30 @@ definition
     ;
 
 function_def
-    : DEF FUN type IDENTIFIER LPAREN params RPAREN NEWLINE indented_block DEDENT END DEF {
+    : DEF FUN type IDENTIFIER LPAREN params RPAREN NEWLINE 
+        {
+            if (!symbol_table_insert(symbol_table, $4, $3, SYM_FUNC, yylineno, $6)) {
+                already_declared_variable_error($4, yylineno);
+            }
+
+            ParamList* p = $6;
+            while (p != NULL) {
+                if (!symbol_table_insert(symbol_table, p->name, p->type, SYM_PARAM, yylineno, NULL)) {
+                    already_declared_variable_error(p->name, yylineno);
+                }
+                p = p->next;
+            }
+
+
+            symbol_table_enter_scope(symbol_table);
+        }
+    indented_block DEDENT END DEF {
         ParamList* params = $6 ? reverse_param_list($6) : NULL;
-        NodeList* body = $9 ? reverse_node_list($9) : NULL;
+        NodeList* body = $10 ? reverse_node_list($10) : NULL;
         $$ = create_function_def($3, $4, params, body, yylineno);
         free($4);
+
+        symbol_table_leave_scope(symbol_table);
     }
     ;
 
@@ -205,10 +242,16 @@ param_list
     ;
 
 class_def
-    : DEF CLASS IDENTIFIER NEWLINE indented_class_block DEDENT END DEF {
-        NodeList* members = $5 ? reverse_node_list($5) : NULL;
+    : DEF CLASS IDENTIFIER NEWLINE
+        {
+            symbol_table_enter_scope(symbol_table);
+        } 
+    indented_class_block DEDENT END DEF {
+        NodeList* members = $6 ? reverse_node_list($6) : NULL;
         $$ = create_type_def($3, members, yylineno);
         free($3);
+
+        symbol_table_leave_scope(symbol_table);
     }
     ;
 
@@ -300,14 +343,23 @@ statement
 
 declaration
     : type IDENTIFIER ASSIGN expression {
+        if (!symbol_table_insert(symbol_table, $2, $1, SYM_VAR, yylineno, NULL)) {
+            already_declared_variable_error($2, yylineno);
+        }
         $$ = create_declaration($1, $2, $4, yylineno);
         free($2);
     }
     | type IDENTIFIER {
+        if (!symbol_table_insert(symbol_table, $2, $1, SYM_VAR, yylineno, NULL)) {
+            already_declared_variable_error($2, yylineno);
+        }
         $$ = create_declaration($1, $2, NULL, yylineno);
         free($2);
     }
     | CONST type IDENTIFIER ASSIGN expression {
+        if (!symbol_table_insert(symbol_table, $3, $2, SYM_VAR, yylineno, NULL)) {
+            already_declared_variable_error($3, yylineno);
+        }
         ASTNode* d = create_declaration($2, $3, $5, yylineno);
         d->declaration.is_const = 1;
         $$ = d;
@@ -491,19 +543,78 @@ unary_expr
 postfix_expr
     : primary_expr
     | postfix_expr LBRACKET expression RBRACKET { $$ = create_array_access($1, $3, yylineno); }
-    | postfix_expr LPAREN opt_args RPAREN { NodeList* args = $3 ? reverse_node_list($3) : NULL; $$ = create_call($1, args, yylineno); }
-    | postfix_expr DOT IDENTIFIER %prec DOT { $$ = create_member_access($1, $3, NULL, yylineno); free($3); }
-    | postfix_expr DOT IDENTIFIER LPAREN opt_args RPAREN { NodeList* args = $5 ? reverse_node_list($5) : NULL; $$ = create_member_access($1, $3, args, yylineno); free($3); }
+    | postfix_expr LPAREN opt_args RPAREN {
+        /* Verifica se o operando é um identificador */
+        if ($1->type == NODE_IDENTIFIER && !$1->identifier.is_builtin) {
+            char *func_name = $1->identifier.name;
+
+            Symbol *sym = symbol_table_lookup(symbol_table, func_name);
+            if (!sym || sym->kind != SYM_FUNC) {
+                fprintf(stderr, "Erro: '%s' não é uma função declarada (linha %d)\n", func_name, yylineno);
+                exit(1);
+            }
+
+            NodeList* args = $3 ? reverse_node_list($3) : NULL;
+
+            int expected_count = count_params(sym->params);
+            int actual_count   = count_nodelist(args);
+            
+            if (expected_count != actual_count) {
+                fprintf(stderr,
+                        "Erro: função '%s' espera %d argumento(s), mas recebeu %d (linha %d)\n",
+                        func_name, expected_count, actual_count, yylineno);
+                exit(1);
+            }
+            
+            ParamList *p = sym->params;
+            NodeList *a = args;
+
+            while (p && a) {
+                if (p->type->base_type != a->node->inferred_type->base_type) {
+                    fprintf(stderr,
+                            "Erro de tipo na chamada '%s': esperado %s, recebido %s (linha %d)\n",
+                            func_name,
+                            datatype_to_string(p->type->base_type),
+                            datatype_to_string(a->node->inferred_type->base_type),
+                            yylineno);
+                    exit(1);
+                }
+                p = p->next;
+                a = a->next;
+            }
+
+            $$ = create_call($1, args, yylineno); 
+            if (sym->type) $$->function_def.return_type = sym->type;
+        } else {
+            NodeList* args = $3 ? reverse_node_list($3) : NULL;
+            $$ = create_call($1, args, yylineno);
+        }
+
+    }
+    | postfix_expr DOT IDENTIFIER %prec DOT { 
+        $$ = create_member_access($1, $3, NULL, yylineno); 
+        free($3); 
+    }
+    | postfix_expr DOT IDENTIFIER LPAREN opt_args RPAREN { 
+        NodeList* args = $5 ? reverse_node_list($5) : NULL; 
+        $$ = create_member_access($1, $3, args, yylineno); 
+        free($3); 
+    }
     | postfix_expr INCREMENT { $$ = create_unary_op(OP_POST_INC, $1, yylineno); }
     | postfix_expr DECREMENT { $$ = create_unary_op(OP_POST_DEC, $1, yylineno); }
     ;
 
 primary_expr
     : literal
-    | IDENTIFIER { $$ = create_identifier($1, yylineno); free($1); }
-    | THIS { $$ = create_identifier("this", yylineno); }
-    | PRINT { $$ = create_identifier("print", yylineno); }
-    | RANGE { $$ = create_identifier("range", yylineno); }
+    | IDENTIFIER { 
+        Symbol* s = symbol_table_lookup(symbol_table, $1);
+        if (!s) {
+            undeclared_variable_error($1, yylineno);
+            exit(1);
+        }
+        $$ = create_identifier($1, yylineno); 
+        free($1);
+    }
     | LPAREN expression RPAREN { $$ = $2; }
     | array_literal
     | set_literal
@@ -569,4 +680,94 @@ static ParamList* reverse_param_list(ParamList* list) {
         cur = nxt;
     }
     return prev;
+}
+
+void undeclared_variable_error(const char* var_name, int line) {
+    fprintf(stderr, "Erro semântico na linha %d: variável '%s' não declarada.\n", line, var_name);
+}
+
+void already_declared_variable_error(char* var_name, int line) {
+    if(symbol_table_lookup(symbol_table, var_name)) {
+        char * out = cat(var_name, " already declared!", "", "", "");
+        yyerror(out);
+        // free(out);
+    }
+}
+
+void type_error(char* t1, char* t2, int line) {
+    if (strcmp(t1, t2) != 0 && !(strcmp(t1, "") == 0 || strcmp(t2, "") == 0)) {
+        char *s = cat("[TYPE ERROR]: ", t1, " and ", t2, " are incompatible");
+        yyerror(s);
+        // free(s);
+    }
+}
+
+char * cat(char* t1, char* t2, char* t3, char* t4, char* t5) {
+    int len = strlen(t1) + strlen(t2) + strlen(t3) + strlen(t4) + strlen(t5) + 1;
+    char * result = (char *)malloc(len * sizeof(char));
+    if (!result) {
+        fprintf(stderr, "Memory allocation failed in cat function.\n");
+        exit(1);
+    }
+
+    sprintf(result, "%s%s%s%s%s", t1, t2, t3, t4, t5);
+    return result;
+}
+
+void check_variables(const char* var_name, int line) {
+    if (find_variable(var_name) == NULL) {
+        undeclared_variable_error(var_name, line);
+        exit(1);
+    }
+}
+
+void vars_routine(ASTNode* node) {
+    if (!node) return;
+
+    switch (node->type) {
+        case NODE_DECLARATION: {
+            check_variables(node->declaration.name, node->line);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+int count_params(ParamList *p) {
+    int count = 0;
+    while (p != NULL) {
+        fprintf(stderr, "Param list: %s\n", p->name);
+        count++;
+        p = p->next;
+    }
+    return count;
+}
+
+int count_nodelist(NodeList *n) {
+    int count = 0;
+    while (n != NULL) {
+        fprintf(stderr, "Param nodelist: %s\n", n->node-identifier.name);
+        count++;
+        n = n->next;
+    }
+    return count;
+}
+
+const char *datatype_to_string(DataType t) {
+    switch (t) {
+        case TYPE_INT: return "int";
+        case TYPE_FLOAT: return "float";
+        case TYPE_BOOL: return "bool";
+        case TYPE_COMPLEX: return "complex";
+        case TYPE_CHAR: return "char";
+        case TYPE_STRING: return "string";
+        case TYPE_VOID: return "void";
+        case TYPE_ARRAY: return "array";
+        case TYPE_MATRIX: return "matrix";
+        case TYPE_SET: return "set";
+        case TYPE_GRAPH: return "graph";
+        case TYPE_CUSTOM: return "custom";
+        default: return "unknown";
+    }
 }

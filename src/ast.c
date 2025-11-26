@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include "ast.h"
+#include "../libs/symbol-table.h"
 #include <stdarg.h>
 
 /* ========================================================================== */
@@ -25,6 +26,7 @@ ASTNode* create_int_literal(int value, int line) {
     node->type = NODE_INT_LITERAL;
     node->line = line;
     node->int_literal.value = value;
+    node->inferred_type = create_type_spec(TYPE_INT, NULL, NULL);
     return node;
 }
 
@@ -97,6 +99,18 @@ ASTNode* create_identifier(char* name, int line) {
     node->type = NODE_IDENTIFIER;
     node->line = line;
     node->identifier.name = strdup(name);
+
+    node->identifier.is_builtin =
+        (strcmp(name, "print") == 0 ||
+         strcmp(name, "range") == 0);
+
+    Symbol* s = symbol_table_lookup(symbol_table, name);
+    if (s == NULL) {
+        fprintf(stderr, "Erro: '%s' não declarado (linha %d)\n", name, line);
+        exit(1);
+    }
+    node->inferred_type = s->type;
+
     return node;
 }
 
@@ -115,6 +129,15 @@ ASTNode* create_binary_op(OperatorType op, ASTNode* left, ASTNode* right, int li
     node->binary_op.op = op;
     node->binary_op.left = left;
     node->binary_op.right = right;
+
+    if (left->inferred_type->base_type == TYPE_INT &&
+        right->inferred_type->base_type == TYPE_INT)
+    {
+        node->inferred_type = create_type_spec(TYPE_INT, NULL, NULL);
+    } else {
+        node->inferred_type = create_type_spec(TYPE_FLOAT, NULL, NULL);
+    }
+
     return node;
 }
 

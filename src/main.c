@@ -1,14 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ast.h"
+#include "../libs/symbol-table.h"
 
 extern FILE* yyin;
 extern int yyparse();
 extern ASTNode* ast_root;
+extern SymbolTable *symbol_table;
 
 int main(int argc, char** argv) {
     FILE* input_file = NULL;
     int result = 0;
+
+    symbol_table = symbol_table_create();
+    symbol_table_enter_scope(symbol_table);
+
+    // TypeSpec* t_void = create_type_spec(TYPE_VOID, NULL, NULL); /* implemente se necessário */
+    // symbol_table_insert(symbol_table, "print", t_void, SYM_FUNC, 0, NULL);
 
     printf("============================================================================\n");
     printf("COMPILADOR - LINGUAGEM MATEMÁTICA\n");
@@ -22,7 +30,7 @@ int main(int argc, char** argv) {
             return 1;
         }
         yyin = input_file;
-        printf("Analisando arquivo: %s\n\n", argv[1]);
+        printf("Analisando arquivo: %s\n\n", argv[1]);        
     } else {
         fprintf(stderr, "USO: %s <arquivo.math>\n", argv[0]);
         return 1;

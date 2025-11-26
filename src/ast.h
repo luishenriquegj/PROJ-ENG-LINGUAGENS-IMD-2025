@@ -53,6 +53,8 @@ typedef struct ASTNode {
     NodeType type;
     int line;
 
+    TypeSpec* inferred_type;
+
     union {
         struct { int value; } int_literal;
         struct { double value; } float_literal;

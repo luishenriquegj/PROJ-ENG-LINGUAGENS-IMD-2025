@@ -9,13 +9,18 @@ YACC = bison
 BUILD_DIR = build
 SRC_DIR = src
 TEST_DIR = tests
+LIBS_DIR = libs
 
 # Arquivos de saída
 TARGET = mathc
 TEST_TOKENS = test_tokens
 
+
 # Objetos do compilador
-OBJS = $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o $(BUILD_DIR)/main.o
+LIBS_SRCS = $(wildcard $(LIBS_DIR)/*.c)
+LIBS_OBJS = $(patsubst $(LIBS_DIR)/%.c, $(BUILD_DIR)/%.o, $(LIBS_SRCS))
+
+OBJS = $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o $(BUILD_DIR)/main.o $(LIBS_OBJS)
 
 # Criar diretório build
 $(BUILD_DIR):
@@ -36,7 +41,7 @@ $(TARGET): $(OBJS)
 
 # Gerar ferramenta de teste de tokens
 $(TEST_TOKENS): $(BUILD_DIR) $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o test_tokens.c
-	$(CC) $(CFLAGS) -I$(BUILD_DIR) -o $@ test_tokens.c $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) -o $@ test_tokens.c $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o $(LIBS_OBJS)
 	@echo "✅ Test tokens gerado!"
 
 # Compilar main.c
@@ -46,6 +51,10 @@ $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c $(SRC_DIR)/ast.h $(BUILD_DIR)/parser.tab.
 # Compilar ast.c
 $(BUILD_DIR)/ast.o: $(SRC_DIR)/ast.c $(SRC_DIR)/ast.h
 	$(CC) $(CFLAGS) -I$(BUILD_DIR) -I$(SRC_DIR) -c -o $@ $(SRC_DIR)/ast.c
+
+# Compilar arquivos em libs/
+$(BUILD_DIR)/%.o: $(LIBS_DIR)/%.c $(LIBS_DIR)/%.h
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) -I$(SRC_DIR) -c -o $@ $<
 
 # Compilar o parser gerado pelo Bison
 $(BUILD_DIR)/parser.tab.o: $(BUILD_DIR)/parser.tab.c $(BUILD_DIR)/parser.tab.h $(SRC_DIR)/ast.h

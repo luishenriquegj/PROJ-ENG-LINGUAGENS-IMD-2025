@@ -1,0 +1,31 @@
+import io
+
+def fun void main()
+    # Duas matrizes definidas pelo programa
+    matrix[int] M = [[1, 2, 3, 4],
+                     [2, 3, 4, 5],
+                     [3, 4, 5, 6],
+                     [4, 5, 6, 7]]
+
+    matrix[int] N = [[0, 9, 8, 7],
+                     [8, 7, 6, 5],
+                     [7, 6, 5, 4],
+                     [6, 5, 4, 3]]
+
+    # Soma das matrizes
+    if (M.length() == N.length() and M.size()[1] == N.size()[1])
+        print("Soma das matrizes:")
+        print(M + N)
+    else
+        print("Não é possível somar as matrizes.")
+    
+
+    # Produto das matrizes
+    if (M.size()[1] == N.length())
+        print("Produto das matrizes:")
+        print(M * N)
+    else
+        print("Não é possível multiplicar as matrizes.")
+    
+
+end def

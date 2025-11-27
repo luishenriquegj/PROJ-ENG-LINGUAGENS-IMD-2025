@@ -1,0 +1,8 @@
+import io
+
+def fun void main()
+    int a = 5
+    int b = 3
+    bool p = (a < b) or (a == b) and not (a > b)
+    print(p)
+end def

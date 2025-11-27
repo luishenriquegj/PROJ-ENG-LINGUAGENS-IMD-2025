@@ -1,0 +1,92 @@
+import io
+
+def rational_t
+    int numerador
+    int denominador
+end def
+
+def fun rational_t criar_racional(int a, int b)
+    rational_t r
+    r.numerador = a
+    r.denominador = b
+    return r
+end def
+
+def fun bool racionais_iguais(rational_t r1, rational_t r2)
+    return r1.numerador * r2.denominador == r2.numerador * r1.denominador
+end def
+
+def fun rational_t soma_racionais(rational_t r1, rational_t r2)
+    rational_t resultado
+    resultado.numerador = r1.numerador * r2.denominador + r2.numerador * r1.denominador
+    resultado.denominador = r1.denominador * r2.denominador
+    return resultado
+end def
+
+def fun rational_t negacao_racional(rational_t r)
+    rational_t resultado
+    resultado.numerador = -r.numerador
+    resultado.denominador = r.denominador
+    return resultado
+end def
+
+def fun rational_t subtracao_racionais(rational_t r1, rational_t r2)
+    rational_t neg_r2 = negacao_racional(r2)
+    return soma_racionais(r1, neg_r2)
+end def
+
+def fun rational_t multiplicacao_racionais(rational_t r1, rational_t r2)
+    rational_t resultado
+    resultado.numerador = r1.numerador * r2.numerador
+    resultado.denominador = r1.denominador * r2.denominador
+    return resultado
+end def
+
+def fun rational_t inverso_racional(rational_t r)
+    rational_t resultado
+    resultado.numerador = r.denominador
+    resultado.denominador = r.numerador
+    return resultado
+end def
+
+def fun rational_t divisao_racionais(rational_t r1, rational_t r2)
+    rational_t inv_r2 = inverso_racional(r2)
+    return multiplicacao_racionais(r1, inv_r2)
+end def
+
+def fun void main()
+    rational_t r1 = criar_racional(1, 2)
+    rational_t r2 = criar_racional(3, 4)
+    
+    print("Racional 1: ")
+    print(r1.numerador)
+    print("/")
+    print(r1.denominador)
+    
+    print("Racional 2: ")
+    print(r2.numerador)
+    print("/")
+    print(r2.denominador)
+    
+    rational_t soma = soma_racionais(r1, r2)
+    print("Soma: ")
+    print(soma.numerador)
+    print("/")
+    print(soma.denominador)
+    
+    rational_t mult = multiplicacao_racionais(r1, r2)
+    print("Multiplicação: ")
+    print(mult.numerador)
+    print("/")
+    print(mult.denominador)
+    
+    rational_t div = divisao_racionais(r1, r2)
+    print("Divisão: ")
+    print(div.numerador)
+    print("/")
+    print(div.denominador)
+    
+    bool iguais = racionais_iguais(r1, r2)
+    print("Iguais: ")
+    print(iguais)
+end def

@@ -10,6 +10,7 @@ BUILD_DIR = build
 SRC_DIR = src
 TEST_DIR = tests
 LIBS_DIR = libs
+OUTPUT_DIR ?= build/tests
 
 # Arquivos de saída
 TARGET = mathc
@@ -20,7 +21,7 @@ TEST_TOKENS = test_tokens
 LIBS_SRCS = $(wildcard $(LIBS_DIR)/*.c)
 LIBS_OBJS = $(patsubst $(LIBS_DIR)/%.c, $(BUILD_DIR)/%.o, $(LIBS_SRCS))
 
-OBJS = $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o $(BUILD_DIR)/main.o $(LIBS_OBJS)
+OBJS = $(BUILD_DIR)/lex.yy.o $(BUILD_DIR)/parser.tab.o $(BUILD_DIR)/ast.o $(BUILD_DIR)/codegen.o $(BUILD_DIR)/main.o $(LIBS_OBJS)
 
 # Criar diretório build
 $(BUILD_DIR):
@@ -52,6 +53,10 @@ $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c $(SRC_DIR)/ast.h $(BUILD_DIR)/parser.tab.
 $(BUILD_DIR)/ast.o: $(SRC_DIR)/ast.c $(SRC_DIR)/ast.h
 	$(CC) $(CFLAGS) -I$(BUILD_DIR) -I$(SRC_DIR) -c -o $@ $(SRC_DIR)/ast.c
 
+# Compilar codegen.c
+$(BUILD_DIR)/codegen.o: $(SRC_DIR)/codegen.c $(SRC_DIR)/codegen.h $(SRC_DIR)/ast.h
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) -I$(SRC_DIR) -c -o $@ $(SRC_DIR)/codegen.c
+
 # Compilar arquivos em libs/
 $(BUILD_DIR)/%.o: $(LIBS_DIR)/%.c $(LIBS_DIR)/%.h
 	$(CC) $(CFLAGS) -I$(BUILD_DIR) -I$(SRC_DIR) -c -o $@ $<
@@ -80,9 +85,9 @@ tokens: $(TEST_TOKENS)
 # Testar com exemplos básicos
 test: $(TARGET)
 	@echo -e "\n🧪 Testando hello_world.mf..."
-	./$(TARGET) $(TEST_DIR)/hello_world.mf
+	./$(TARGET) -o $(OUTPUT_DIR) $(TEST_DIR)/hello_world.mf
 	@echo -e "\n🧪 Testando variables.mf..."
-	./$(TARGET) $(TEST_DIR)/variables.mf
+	./$(TARGET) -o $(OUTPUT_DIR) $(TEST_DIR)/variables.mf
 
 # Executar todos os testes (script faz build se necessário)
 test-all:
@@ -106,7 +111,10 @@ test-check:
 
 # Limpar arquivos gerados
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET) $(TEST_TOKENS)
+	rm -rf $(BUILD_DIR)
+	rm -rf .idea
+	rm -f $(TARGET) $(TEST_TOKENS)
+	rm -f build_log.txt
 	@echo "🧹 Arquivos limpos!"
 
 # Debug: imprimir variáveis
@@ -139,6 +147,10 @@ help:
 	@echo "  make rebuild"
 	@echo "  make test-all"
 	@echo "  ./mathc tests/hello_world.mf"
+	@echo "  make OUTPUT_DIR=/tmp/my_output test-all"
 	@echo ""
+	@echo "Variáveis customizáveis:"
+	@echo "  OUTPUT_DIR=path  - Diretório para arquivos de saída (padrão: build/tests)"
+	@echo "  MATHC_OUTPUT_DIR=path - Variável de ambiente para diretório de saída"
 
 .PHONY: all rebuild test test-all test-check tokens clean debug help

@@ -1,0 +1,8 @@
+import io
+
+def fun void main()
+    char c = '\n'
+    print("Antes")
+    print(c)
+    print("Depois")
+end def

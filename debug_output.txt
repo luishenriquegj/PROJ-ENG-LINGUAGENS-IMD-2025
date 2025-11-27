@@ -1,0 +1,368 @@
+============================================================================
+COMPILADOR - LINGUAGEM MATEMÁTICA
+UFRN - Engenharia de Linguagens
+============================================================================
+
+Analisando arquivo: test_merge.mf
+
+Iniciando análise sintática...
+
+✓ Análise sintática concluída com SUCESSO!
+
+============================================================================
+ÁRVORE SINTÁTICA ABSTRATA (AST)
+============================================================================
+
+Total de nós na AST: 160
+
+(PROGRAM
+  (IMPORTS
+    (IMPORT io)
+  )
+  (DEFINITIONS
+    (FUNCTION main
+      (RETURN_TYPE
+        (TYPE void)
+      )
+      (BODY
+        (DECL lista
+          (TYPE array
+            (TYPE int)
+          )
+          (INIT
+            (ARRAY
+              (INT 0)
+              (INT 0)
+              (INT 0)
+              (INT 0)
+              (INT 0)
+            )
+          )
+        )
+        (DECL esquerda
+          (TYPE array
+            (TYPE int)
+          )
+          (INIT
+            (ARRAY
+              (INT 1)
+              (INT 3)
+            )
+          )
+        )
+        (DECL direita
+          (TYPE array
+            (TYPE int)
+          )
+          (INIT
+            (ARRAY
+              (INT 2)
+              (INT 4)
+              (INT 5)
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (STRING "Antes do merge:")
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (STRING "Lista:")
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (ID lista)
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (STRING "Esquerda:")
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (ID esquerda)
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (STRING "Direita:")
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (ID direita)
+            )
+          )
+        )
+        (DECL i
+          (TYPE int)
+          (INIT
+            (INT 0)
+          )
+        )
+        (DECL j
+          (TYPE int)
+          (INIT
+            (INT 0)
+          )
+        )
+        (DECL k
+          (TYPE int)
+          (INIT
+            (INT 0)
+          )
+        )
+        (WHILE
+          (COND
+            (BINOP and
+              (BINOP <
+                (ID i)
+                (CALL
+                  (ID len)
+                  (ARGS
+                    (ID esquerda)
+                  )
+                )
+              )
+              (BINOP <
+                (ID j)
+                (CALL
+                  (ID len)
+                  (ARGS
+                    (ID direita)
+                  )
+                )
+              )
+            )
+          )
+          (BODY
+            (IF
+              (COND
+                (BINOP <=
+                  (ARRAY_ACCESS
+                    (ID esquerda)
+                    (ID i)
+                  )
+                  (ARRAY_ACCESS
+                    (ID direita)
+                    (ID j)
+                  )
+                )
+              )
+              (THEN
+                (ASSIGN ?
+                  (ARRAY_ACCESS
+                    (ID lista)
+                    (ID k)
+                  )
+                  (ARRAY_ACCESS
+                    (ID esquerda)
+                    (ID i)
+                  )
+                )
+                (ASSIGN ?
+                  (ID i)
+                  (BINOP +
+                    (ID i)
+                    (INT 1)
+                  )
+                )
+              )
+              (ELSE
+                (ASSIGN ?
+                  (ID j)
+                  (BINOP +
+                    (ID j)
+                  [codegen] cria contexto
+[codegen] program start
+[codegen] function main
+[codegen] func_name ptr=0x56388ad02d60 text=main
+[codegen] stmt node type=15
+[codegen] stmt node type=15
+[codegen] stmt node type=15
+[codegen] stmt node type=23
+[codegen] stmt node type=23
+[codegen] stmt node type=23
+[codegen] stmt node type=23
+[codegen] stmt node type=23
+[codegen] stmt node type=23
+[codegen] stmt node type=23
+[codegen] stmt node type=15
+[codegen] stmt node type=15
+[codegen] stmt node type=15
+[codegen] stmt node type=18
+[codegen] stmt node type=18
+[codegen] stmt node type=18
+[codegen] stmt node type=23
+[codegen] stmt node type=23
+[codegen] stmt node type=23
+[codegen] program end
+[codegen] libera contexto
+  (INT 1)
+                  )
+                )
+                (ASSIGN ?
+                  (ARRAY_ACCESS
+                    (ID lista)
+                    (ID k)
+                  )
+                  (ARRAY_ACCESS
+                    (ID direita)
+                    (ID j)
+                  )
+                )
+              )
+            )
+            (ASSIGN ?
+              (ID k)
+              (BINOP +
+                (ID k)
+                (INT 1)
+              )
+            )
+          )
+        )
+        (WHILE
+          (COND
+            (BINOP <
+              (ID i)
+              (CALL
+                (ID len)
+                (ARGS
+                  (ID esquerda)
+                )
+              )
+            )
+          )
+          (BODY
+            (ASSIGN ?
+              (ARRAY_ACCESS
+                (ID lista)
+                (ID k)
+              )
+              (ARRAY_ACCESS
+                (ID esquerda)
+                (ID i)
+              )
+            )
+            (ASSIGN ?
+              (ID i)
+              (BINOP +
+                (ID i)
+                (INT 1)
+              )
+            )
+            (ASSIGN ?
+              (ID k)
+              (BINOP +
+                (ID k)
+                (INT 1)
+              )
+            )
+          )
+        )
+        (WHILE
+          (COND
+            (BINOP <
+              (ID j)
+              (CALL
+                (ID len)
+                (ARGS
+                  (ID direita)
+                )
+              )
+            )
+          )
+          (BODY
+            (ASSIGN ?
+              (ARRAY_ACCESS
+                (ID lista)
+                (ID k)
+              )
+              (ARRAY_ACCESS
+                (ID direita)
+                (ID j)
+              )
+            )
+            (ASSIGN ?
+              (ID j)
+              (BINOP +
+                (ID j)
+                (INT 1)
+              )
+            )
+            (ASSIGN ?
+              (ID k)
+              (BINOP +
+                (ID k)
+                (INT 1)
+              )
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (STRING "Depois do merge:")
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (STRING "Lista:")
+            )
+          )
+        )
+        (EXPR_STMT
+          (CALL
+            (ID print)
+            (ARGS
+              (ID lista)
+            )
+          )
+        )
+      )
+    )
+  )
+  (MAIN
+  )
+)
+
+============================================================================
+
+Gerando código C em: build/tests/test_merge.c
+✓ Código C gerado com sucesso!
+
+Compilando código C...
+✓ Compilação concluída com sucesso!
+Executável gerado: build/tests/test_merge.out
+
+Liberando memória da AST...
+Memória liberada com sucesso!

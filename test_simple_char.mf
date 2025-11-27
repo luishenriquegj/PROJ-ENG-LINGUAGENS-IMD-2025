@@ -1,0 +1,6 @@
+import io
+
+def fun void main()
+    char c = 'A'
+    print(c)
+end def

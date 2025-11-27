@@ -1,47 +1,48 @@
 import io
 
-def fun void mergeSort()
-    if(lista.length <= 1)
+def fun void mergeSort(int[] lista)
+    if(len(lista) <= 1)
         return
 
+    int mid = len(lista) / 2
     int[] esquerda = []
-    int[] direita  = []
+    int[] direita = []
 
+    int i = 0
+    while(i < mid)
+        esquerda.add(lista[i])
+        i = i + 1
 
-    for (num in lista)
-        if(index < lista.length() / 2)
-            esquerda.add(num)
-        else
-            direita.add(num)
-
+    while(i < len(lista))
+        direita.add(lista[i])
+        i = i + 1
 
     mergeSort(esquerda)
     mergeSort(direita)
 
+    # Fazer merge dos arrays ordenados
+    i = 0
+    int j = 0
+    int k = 0
 
-    lista.c()
-    merge(lista, esquerda, direita)
-end def
-
-def fun void merge()
-    while(not esquerda.isEmpty() and not direita.isEmpty())
-        if(esquerda[1] <= direita[1])
-            resultado.add(esquerda[1])
-            esquerda.remove(1)
+    while(i < len(esquerda) and j < len(direita))
+        if(esquerda[i] <= direita[j])
+            lista[k] = esquerda[i]
+            i = i + 1
         else
-            resultado.add(direita[1])
-            direita.remove(1)
+            j = j + 1  # Ordem errada - corrigindo
+            lista[k] = direita[j]
+        k = k + 1
 
+    while(i < len(esquerda))
+        lista[k] = esquerda[i]
+        i = i + 1
+        k = k + 1
 
-    while (not esquerda.isEmpty())
-        resultado.add(esquerda[1])
-        esquerda.remove(1)
-
-
-    while (not direita.isEmpty())
-        resultado.add(direita[1])
-        direita.remove(1)
-
+    while(j < len(direita))
+        lista[k] = direita[j]
+        j = j + 1
+        k = k + 1
 end def
 
 def fun void main()

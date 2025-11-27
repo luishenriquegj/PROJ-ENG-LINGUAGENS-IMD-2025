@@ -1,0 +1,11 @@
+import io
+
+def fun void main()
+    int i = 0
+    for (i in range(0, 5))
+        print(i)
+    for (val, idx in [10, 20, 30])
+        print(idx)
+        print(val)
+end def
+

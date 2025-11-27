@@ -1,9 +1,13 @@
 #!/bin/bash
 # Script de Teste Final do Compilador
 
+# Define o diretório de output padrão se não estiver definido
+export MATHC_OUTPUT_DIR="${MATHC_OUTPUT_DIR:-build/tests}"
+
 echo "========================================"
 echo "COMPILADOR DE LINGUAGEM MATEMÁTICA"
 echo "Teste de Validação Final"
+echo "Diretório de output: $MATHC_OUTPUT_DIR"
 echo "========================================"
 echo ""
 
@@ -44,20 +48,33 @@ printf "%-${MAX_LEN}s  %s\n" "ARQUIVO" "RESULTADO"
 printf "%-${MAX_LEN}s  %s\n" "$(printf '%*s' $MAX_LEN | tr ' ' '-')" "--------"
 
 for test_file in "${TEST_FILES[@]}"; do
-    base_name=$(basename "$test_file")
-    printf "%-${MAX_LEN}s  " "$base_name"
+    base_name=$(basename "$test_file" .mf)
+    printf "%-${MAX_LEN}s  " "$base_name.mf"
+
+    # Arquivo executável esperado
+    expected_exe="$MATHC_OUTPUT_DIR/$base_name.out"
 
     # Usa arquivo temporário para capturar saída exata
     temp_out=$(mktemp)
     if ./mathc "$test_file" >"$temp_out" 2>&1; then
-        # Compilador retornou 0 → sucesso?
-        if grep -q "SUCESSO" "$temp_out"; then
-            echo "✅ PASSOU"
-            ((PASSED++))
+        # Compilador retornou 0 - verifica se executável foi gerado
+        if [ -f "$expected_exe" ]; then
+            # Executa o programa compilado
+            if "$expected_exe" >>"$temp_out" 2>&1; then
+                # Programa executou com sucesso
+                echo "✅ PASSOU"
+                ((PASSED++))
+            else
+                # Programa executou mas falhou (exit != 0)
+                echo "❌ FALHOU"
+                ((FAILED++))
+                FAILED_DETAILS+=("$base_name.mf|$temp_out")
+            fi
         else
+            # Executável não foi gerado
             echo "❌ FALHOU"
             ((FAILED++))
-            FAILED_DETAILS+=("$base_name|$temp_out")
+            FAILED_DETAILS+=("$base_name.mf|$temp_out")
         fi
     else
         # Compilador falhou (exit != 0) → falha

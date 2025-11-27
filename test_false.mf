@@ -1,0 +1,6 @@
+import io
+
+def fun void main()
+    bool p = false
+    print(p)
+end def

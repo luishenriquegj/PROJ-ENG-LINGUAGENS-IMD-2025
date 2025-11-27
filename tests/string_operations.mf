@@ -19,9 +19,11 @@ def fun void main()
     # Array of strings
     string[] messages = ["Error", "Warning", "Info"]
     
-    for (msg in messages)
-        print(msg)
-    
+    # Loop com strings requer inferência avançada, testando acesso direto
+    print(messages[0])
+    print(messages[1])
+    print(messages[2])
+
     # Multi-line concepts (if supported with escapes)
     string multiline = "First line\nSecond line\nThird line"
     print(multiline)

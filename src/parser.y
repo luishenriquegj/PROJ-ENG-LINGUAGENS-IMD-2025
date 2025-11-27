@@ -22,7 +22,6 @@ void vars_routine(ASTNode* node);
 int count_params(ParamList *p);
 int count_nodelist(NodeList *n);
 
-static char buffer[256];
 const char* datatype_to_string(DataType t);
 const char* datatype_to_string_full(TypeSpec* t);
 
@@ -37,12 +36,12 @@ ASTNode* ast_root = NULL;
 static NodeList* reverse_node_list(NodeList* list);
 static ParamList* reverse_param_list(ParamList* list);
 
-// Temporary storage for for loop variables
 static char* for_iter_name = NULL;
 static char* for_val_name = NULL;
 static char* for_idx_name = NULL;
 static ASTNode* for_iter_expr = NULL;
 static NodeList* for_body = NULL;
+static ParamList* current_func_params = NULL;
 
 static void print_syntax_error(const char* msg) {
     const int W = 100;
@@ -208,12 +207,12 @@ definition
 function_def
     : DEF FUN type IDENTIFIER LPAREN params RPAREN NEWLINE 
         {
-            if (!symbol_table_insert(symbol_table, $4, $3, SYM_FUNC, yylineno, $6)) {
+            current_func_params = $6 ? reverse_param_list($6) : NULL;
+            if (!symbol_table_insert(symbol_table, $4, $3, SYM_FUNC, yylineno, current_func_params)) {
                 already_declared_variable_error($4, yylineno);
             }
             symbol_table_enter_scope(symbol_table);
-            // Insert parameters in function scope
-            ParamList* p = $6;
+            ParamList* p = current_func_params;
             while (p != NULL) {
                 if (!symbol_table_insert(symbol_table, p->name, p->type, SYM_PARAM, yylineno, NULL)) {
                     already_declared_variable_error(p->name, yylineno);
@@ -222,11 +221,11 @@ function_def
             }
         }
     func_body_block END DEF {
-        ParamList* params = $6 ? reverse_param_list($6) : NULL;
-        $$ = create_function_def($3, $4, params, for_body, yylineno);
+        $$ = create_function_def($3, $4, current_func_params, for_body, yylineno);
         free($4);
         symbol_table_leave_scope(symbol_table);
         for_body = NULL;
+        current_func_params = NULL;
     }
     ;
 
@@ -254,14 +253,14 @@ param_list
     ;
 
 class_def
-    : DEF CLASS IDENTIFIER NEWLINE
+    : DEF IDENTIFIER NEWLINE
         {
             symbol_table_enter_scope(symbol_table);
         } 
     indented_class_block DEDENT END DEF {
-        NodeList* members = $6 ? reverse_node_list($6) : NULL;
-        $$ = create_type_def($3, members, yylineno);
-        free($3);
+        NodeList* members = $5 ? reverse_node_list($5) : NULL;
+        $$ = create_type_def($2, members, yylineno);
+        free($2);
 
         symbol_table_leave_scope(symbol_table);
     }
@@ -757,6 +756,7 @@ static ParamList* reverse_param_list(ParamList* list) {
         prev = cur;
         cur = nxt;
     }
+
     return prev;
 }
 

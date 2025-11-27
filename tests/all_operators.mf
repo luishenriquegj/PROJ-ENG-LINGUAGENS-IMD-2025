@@ -14,16 +14,16 @@ def fun void main()
     bool p = (a < b) or (a == b) and not (a > b)
     bool q = (a <= b) and (b >= 2) or (a != 0)
 
-    a++
-    b--
-    ++a
-    --b
-
     int x = 2
     int y = 3
     int z = x ^ y
     int m = x @ y
     int f = a // b
+
+    a++
+    b--
+    ++a
+    --b
 
     print(a)
     print(b)

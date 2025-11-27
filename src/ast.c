@@ -101,8 +101,6 @@ ASTNode* create_identifier(char* name, int line) {
     node->line = line;
     node->identifier.name = strdup(name);
 
-        (strcmp(name, "print") == 0 ||
-         strcmp(name, "range") == 0);
 
     Symbol* s = symbol_table_lookup(symbol_table, name);
     if (s == NULL) {
@@ -130,7 +128,8 @@ ASTNode* create_binary_op(OperatorType op, ASTNode* left, ASTNode* right, int li
     node->binary_op.left = left;
     node->binary_op.right = right;
 
-    if (left->inferred_type->base_type == TYPE_INT &&
+    if (left && left->inferred_type && right && right->inferred_type &&
+        left->inferred_type->base_type == TYPE_INT &&
         right->inferred_type->base_type == TYPE_INT)
     {
         node->inferred_type = create_type_spec(TYPE_INT, NULL, NULL);

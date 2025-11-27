@@ -1,6 +1,0 @@
-import io
-
-def fun void main()
-    bool p = (1 < 2) and (3 > 2)
-    print(p)
-end def

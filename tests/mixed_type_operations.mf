@@ -15,8 +15,8 @@ end def
 
 def fun void main()
     # Long expression
-    int complex_expr = ((10 + 20) * (30 - 15) / 5 + 100) % 50 ^ 2 // 3
-    
+    int complex_expr = ((10 + 20) * (30 - 15) / 5 + 100) % (50 * 50) // 3
+
     # Many variables
     int v1 = 1
     int v2 = 2

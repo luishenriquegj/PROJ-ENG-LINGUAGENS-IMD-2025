@@ -86,7 +86,6 @@ const char* codegen_type_to_c(TypeSpec* type) {
                     // Array multidimensional
                     snprintf(type_buffer, sizeof(type_buffer), "%s*", elem_type);
                 } else {
-                    // Array simples
                     snprintf(type_buffer, sizeof(type_buffer), "%s*", elem_type);
                 }
                 return type_buffer;
@@ -101,15 +100,15 @@ const char* codegen_type_to_c(TypeSpec* type) {
 }
 
 void codegen_runtime_helpers(CodeGenContext* ctx) {
-    fputs("// Runtime helpers (range emulation)\n", ctx->output);
+    fputs("// Helpers de runtime (emulação de range)\n", ctx->output);
     fputs("typedef struct { int start; int end; int step; } range_t;\n", ctx->output);
     fputs("static inline range_t make_range(int s, int e, int st){ range_t r={s,e,st}; return r; }\n", ctx->output);
     fputs("static inline int range_has_next(range_t* r, int i){ return r->step>0 ? i<r->end : i>r->end; }\n", ctx->output);
     fputs("static inline int mathc_floor_div(int a, int b){ if (b == 0) { fprintf(stderr, \"Erro: Divisao por zero\\n\"); exit(1); } int q = a / b; int r = a % b; if ((r != 0) && ((r > 0) != (b > 0))) q--; return q; }\n", ctx->output);
 
-    // Set operation helpers
-    fputs("// Set operation helpers\n", ctx->output);
-    fputs("static inline int* set_union(int* a, int a_len, int* b, int b_len) {\n", ctx->output);
+    fputs("// Helpers para operações com conjuntos\n", ctx->output);
+    fputs("typedef struct { int* ptr; int len; } set_result_t;\n", ctx->output);
+    fputs("static inline set_result_t set_union(int* a, int a_len, int* b, int b_len) {\n", ctx->output);
     fputs("    int* result = malloc(sizeof(int) * (a_len + b_len));\n", ctx->output);
     fputs("    int result_len = 0;\n", ctx->output);
     fputs("    for (int i = 0; i < a_len; i++) result[result_len++] = a[i];\n", ctx->output);
@@ -118,10 +117,10 @@ void codegen_runtime_helpers(CodeGenContext* ctx) {
     fputs("        for (int j = 0; j < a_len; j++) if (b[i] == a[j]) { found = 1; break; }\n", ctx->output);
     fputs("        if (!found) result[result_len++] = b[i];\n", ctx->output);
     fputs("    }\n", ctx->output);
-    fputs("    // Note: caller should update __len field\n", ctx->output);
-    fputs("    return result;\n", ctx->output);
+    fputs("    set_result_t r = {result, result_len};\n", ctx->output);
+    fputs("    return r;\n", ctx->output);
     fputs("}\n", ctx->output);
-    fputs("static inline int* set_difference(int* a, int a_len, int* b, int b_len) {\n", ctx->output);
+    fputs("static inline set_result_t set_difference(int* a, int a_len, int* b, int b_len) {\n", ctx->output);
     fputs("    int* result = malloc(sizeof(int) * a_len);\n", ctx->output);
     fputs("    int result_len = 0;\n", ctx->output);
     fputs("    for (int i = 0; i < a_len; i++) {\n", ctx->output);
@@ -129,11 +128,18 @@ void codegen_runtime_helpers(CodeGenContext* ctx) {
     fputs("        for (int j = 0; j < b_len; j++) if (a[i] == b[j]) { found = 1; break; }\n", ctx->output);
     fputs("        if (!found) result[result_len++] = a[i];\n", ctx->output);
     fputs("    }\n", ctx->output);
-    fputs("    return result;\n", ctx->output);
+    fputs("    set_result_t r = {result, result_len};\n", ctx->output);
+    fputs("    return r;\n", ctx->output);
     fputs("}\n", ctx->output);
     fputs("static inline int set_contains(int* set, int set_len, int element) {\n", ctx->output);
     fputs("    for (int i = 0; i < set_len; i++) if (set[i] == element) return 1;\n", ctx->output);
     fputs("    return 0;\n", ctx->output);
+    fputs("}\n", ctx->output);
+    fputs("static inline int set_is_subset(int* a, int a_len, int* b, int b_len) {\n", ctx->output);
+    fputs("    for (int i = 0; i < a_len; i++) {\n", ctx->output);
+    fputs("        if (!set_contains(b, b_len, a[i])) return 0;\n", ctx->output);
+    fputs("    }\n", ctx->output);
+    fputs("    return 1;\n", ctx->output);
     fputs("}\n", ctx->output);
 
     fputc('\n', ctx->output);
@@ -172,15 +178,13 @@ void codegen_emit_frees(CodeGenContext* ctx) {
 }
 
 void codegen_member_access(CodeGenContext* ctx, ASTNode* member) {
-    if (!member || member->type != NODE_MEMBER_ACCESS) { codegen_emit(ctx, "/* invalid member */"); return; }
+    if (!member || member->type != NODE_MEMBER_ACCESS) { codegen_emit(ctx, "/* membro inválido */"); return; }
 
     ASTNode* obj = member->member_access.object;
     const char* method = member->member_access.member;
 
-    // Special handling for array methods
     if (obj->inferred_type && obj->inferred_type->base_type == TYPE_ARRAY) {
         if (strcmp(method, "add") == 0 && member->member_access.args) {
-            // array.add(element) -> array = realloc(array, sizeof(*array) * (array__len + 1)); array[array__len++] = element;
             codegen_emit(ctx, "(");
             codegen_expression(ctx, obj);
             codegen_emit(ctx, " = realloc(");
@@ -198,7 +202,6 @@ void codegen_member_access(CodeGenContext* ctx, ASTNode* member) {
             codegen_emit(ctx, ")");
             return;
         } else if (strcmp(method, "remove") == 0 && member->member_access.args) {
-            // array.remove(index) -> memmove(&array[index], &array[index+1], sizeof(*array) * (array__len - index - 1)); array__len--;
             codegen_emit(ctx, "(memmove(&");
             codegen_expression(ctx, obj);
             codegen_emit(ctx, "[");
@@ -225,17 +228,18 @@ void codegen_member_access(CodeGenContext* ctx, ASTNode* member) {
         }
     }
 
-    // Special handling for struct field access
     if (obj->inferred_type && obj->inferred_type->type_name) {
         if (!member->member_access.args) {
-            // This is a field access: struct.field
             codegen_expression(ctx, obj);
-            codegen_emit(ctx, ".%s", method);
+            if (obj->inferred_type->base_type == TYPE_CUSTOM && obj->type == NODE_IDENTIFIER) {
+                codegen_emit(ctx, "->%s", method);
+            } else {
+                codegen_emit(ctx, ".%s", method);
+            }
             return;
         } else {
-            // This is a method call on a user-defined type (struct/class)
             codegen_emit(ctx, "%s_%s(", obj->inferred_type->type_name, method);
-            codegen_expression(ctx, obj);  // first argument is the struct itself
+            codegen_expression(ctx, obj);
             NodeList* a = member->member_access.args;
             while (a) {
                 codegen_emit(ctx, ", ");
@@ -247,11 +251,9 @@ void codegen_member_access(CodeGenContext* ctx, ASTNode* member) {
         }
     }
 
-    // Default member access (for pointers, etc.)
     codegen_expression(ctx, member->member_access.object);
     codegen_emit(ctx, "->%s", member->member_access.member);
     if (member->member_access.args) {
-        // call style
         codegen_emit(ctx, "(");
         NodeList* a = member->member_access.args; int first=1;
         while (a) { if (!first) codegen_emit(ctx, ", "); codegen_expression(ctx, a->node); first=0; a=a->next; }
@@ -405,34 +407,42 @@ void codegen_struct(CodeGenContext* ctx, ASTNode* type_def) {
 }
 
 void codegen_function(CodeGenContext* ctx, ASTNode* func) {
-    DBG("function %s", func && func->type == NODE_FUNCTION_DEF ? func->function_def.name : "<invalid>");
+    DBG("funcao %s", func && func->type == NODE_FUNCTION_DEF ? func->function_def.name : "<invalida>");
     if (!func) { DBG("null func"); return; }
     if (func->type != NODE_FUNCTION_DEF) { DBG("wrong node type: %d", func->type); return; }
 
     const char* ret_type = "void";
+    int ret_is_custom = 0;
     if (func->function_def.return_type) {
         ret_type = codegen_type_to_c(func->function_def.return_type);
+        ret_is_custom = (func->function_def.return_type->base_type == TYPE_CUSTOM);
     }
     const char* func_name = func->function_def.name ? func->function_def.name : "fn";
     
     int is_main = (strcmp(func_name, "main") == 0);
     if (is_main) {
         ret_type = "int";
+        ret_is_custom = 0;
     }
     
     DBG("func_name ptr=%p text=%s", (void*)func->function_def.name, func_name);
-    fputs(ret_type, ctx->output);
-    fputc(' ', ctx->output);
+    if (ret_is_custom) {
+        fputs(ret_type, ctx->output);
+        fputs("* ", ctx->output);
+    } else {
+        fputs(ret_type, ctx->output);
+        fputc(' ', ctx->output);
+    }
     fputs(func_name, ctx->output);
     fputc('(', ctx->output);
     fflush(ctx->output);
 
     ParamList* params = func->function_def.parameters;
+
     int first = 1;
     while (params) {
         const char* pname = params->name ? params->name : "arg";
 
-        // Para arrays, gerar dois parâmetros: ponteiro e tamanho
         if (params->type && params->type->base_type == TYPE_ARRAY) {
             const char* elem_type = params->type->element_type ?
                 codegen_type_to_c(params->type->element_type) : "int";
@@ -443,7 +453,11 @@ void codegen_function(CodeGenContext* ctx, ASTNode* func) {
         } else {
             const char* ptype = codegen_type_to_c(params->type);
             if (!first) codegen_emit(ctx, ", ");
-            codegen_emit(ctx, "%s %s", ptype ? ptype : "int", pname);
+            if (params->type && params->type->base_type == TYPE_CUSTOM) {
+                codegen_emit(ctx, "%s* %s", ptype ? ptype : "void", pname);
+            } else {
+                codegen_emit(ctx, "%s %s", ptype ? ptype : "int", pname);
+            }
             first = 0;
         }
 
@@ -492,14 +506,6 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
             TypeSpec* var_type = stmt->declaration.var_type;
             const char* type_str = codegen_type_to_c(var_type);
 
-            // Default case for simple declarations
-            codegen_emit(ctx, "%s %s", type_str, stmt->declaration.name);
-            if (stmt->declaration.initializer) {
-                codegen_emit(ctx, " = ");
-                codegen_expression(ctx, stmt->declaration.initializer);
-            }
-            codegen_emit(ctx, ";\n");
-            break;
 
             // Primeiro trata arrays multidimensionais
             if (var_type && var_type->base_type == TYPE_ARRAY && var_type->element_type &&
@@ -510,14 +516,12 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
                     stmt->declaration.initializer->array_literal.elements->node &&
                     stmt->declaration.initializer->array_literal.elements->node->type == NODE_ARRAY_LITERAL) {
 
-                    // Array multidimensional: [[1,2],[3,4],[5,6]]
                     TypeSpec* elem_type = var_type->element_type->element_type;
                     const char* elem_c_type = elem_type ? codegen_type_to_c(elem_type) : "int";
 
                     int rows = count_literal_elements(stmt->declaration.initializer);
                     int cols = 0;
 
-                    // Conta colunas da primeira linha
                     if (stmt->declaration.initializer->array_literal.elements &&
                         stmt->declaration.initializer->array_literal.elements->node &&
                         stmt->declaration.initializer->array_literal.elements->node->type == NODE_ARRAY_LITERAL) {
@@ -611,14 +615,28 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
                     codegen_record_alloc(ctx, stmt->declaration.name);
                     return;
                 } else {
-                    codegen_emit(ctx, "%s* %s", elem_c_type, stmt->declaration.name);
-                    if (stmt->declaration.initializer) {
-                        codegen_emit(ctx, " = ");
+                    if (stmt->declaration.initializer &&
+                        stmt->declaration.initializer->type == NODE_BINARY_OP &&
+                        (stmt->declaration.initializer->binary_op.op == OP_ADD ||
+                         stmt->declaration.initializer->binary_op.op == OP_SUB)) {
+                        int temp_id = codegen_new_temp(ctx);
+                        codegen_emit(ctx, "set_result_t _tmp%d = ", temp_id);
                         codegen_expression(ctx, stmt->declaration.initializer);
+                        codegen_emit(ctx, ";\n");
+                        codegen_emit_indent(ctx);
+                        codegen_emit(ctx, "%s* %s = _tmp%d.ptr;\n", elem_c_type, stmt->declaration.name, temp_id);
+                        codegen_emit_indent(ctx);
+                        codegen_emit(ctx, "int %s__len = _tmp%d.len;\n", stmt->declaration.name, temp_id);
+                    } else {
+                        codegen_emit(ctx, "%s* %s", elem_c_type, stmt->declaration.name);
+                        if (stmt->declaration.initializer) {
+                            codegen_emit(ctx, " = ");
+                            codegen_expression(ctx, stmt->declaration.initializer);
+                        }
+                        codegen_emit(ctx, ";\n");
+                        codegen_emit_indent(ctx);
+                        codegen_emit(ctx, "int %s__len = 0;\n", stmt->declaration.name);
                     }
-                    codegen_emit(ctx, ";\n");
-                    codegen_emit_indent(ctx);
-                    codegen_emit(ctx, "int %s__len = 0;\n", stmt->declaration.name);
                     return;
                 }
             }
@@ -662,28 +680,34 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
                 codegen_emit_indent(ctx);
                 codegen_emit(ctx, "int %s__cols = 0;\n", stmt->declaration.name);
                 return;
+                }
             }
 
-            // Default case for simple declarations
-            codegen_emit(ctx, "%s %s", type_str, stmt->declaration.name);
-            if (stmt->declaration.initializer) {
-                codegen_emit(ctx, " = ");
-                codegen_expression(ctx, stmt->declaration.initializer);
+            if (var_type && var_type->base_type == TYPE_CUSTOM) {
+                if (stmt->declaration.initializer) {
+                    codegen_emit(ctx, "%s* %s = ", type_str, stmt->declaration.name);
+                    codegen_expression(ctx, stmt->declaration.initializer);
+                    codegen_emit(ctx, ";\n");
+                } else {
+                    codegen_emit(ctx, "%s* %s = malloc(sizeof(%s));\n", type_str, stmt->declaration.name, type_str);
+                    codegen_record_alloc(ctx, stmt->declaration.name);
+                }
+            } else {
+                codegen_emit(ctx, "%s %s", type_str, stmt->declaration.name);
+                if (stmt->declaration.initializer) {
+                    codegen_emit(ctx, " = ");
+                    codegen_expression(ctx, stmt->declaration.initializer);
+                }
+                codegen_emit(ctx, ";\n");
             }
-            codegen_emit(ctx, ";\n");
             break;
         }
         case NODE_FOR_STMT: {
-            // Basic for loop implementation
-            int startL = codegen_new_label(ctx);
-            int endL = codegen_new_label(ctx);
-
-            // For now, assume it's an array iteration
             ASTNode* iterable = stmt->for_stmt.iterable;
             const char* iterName = stmt->for_stmt.iterator;
+            const char* indexName = stmt->for_stmt.index_var;
 
             if (iterable->type == NODE_IDENTIFIER) {
-                // Simple array iteration
                 codegen_emit(ctx, "{\n");
                 ctx->indent_level++;
                 codegen_emit_indent(ctx);
@@ -694,9 +718,15 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
                 codegen_emit(ctx, "for (_i = 0; _i < _len; _i++) {\n");
                 ctx->indent_level++;
                 codegen_emit_indent(ctx);
-                codegen_emit(ctx, "int %s = %s[_i];\n", iterName, iterable->identifier.name);
 
-                // Generate body
+                if (indexName) {
+                    codegen_emit(ctx, "int %s = _i;\n", indexName);
+                    codegen_emit_indent(ctx);
+                    codegen_emit(ctx, "int %s = %s[_i];\n", iterName, iterable->identifier.name);
+                } else {
+                    codegen_emit(ctx, "int %s = %s[_i];\n", iterName, iterable->identifier.name);
+                }
+
                 NodeList* body = stmt->for_stmt.body;
                 while (body) {
                     if (body->node) {
@@ -712,7 +742,7 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
                 codegen_emit_indent(ctx);
                 codegen_emit(ctx, "}\n");
             } else {
-                codegen_emit(ctx, "/* Unsupported for loop */\n");
+                codegen_emit(ctx, "/* loop for nao suportado */\n");
             }
             break;
         }
@@ -723,7 +753,6 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
                 codegen_emit(ctx, " = ");
                 codegen_expression(ctx, stmt->assignment.value);
             } else {
-                // Compound assignment
                 codegen_expression(ctx, stmt->assignment.target);
                 codegen_emit(ctx, " = ");
                 codegen_expression(ctx, stmt->assignment.target);
@@ -736,32 +765,11 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
                     default: codegen_emit(ctx, " /*compound?*/ "); break;
                 }
                 codegen_expression(ctx, stmt->assignment.value);
-            }
-                codegen_expression(ctx, stmt->assignment.target);
-                codegen_emit(ctx, " = ");
-                codegen_expression(ctx, stmt->assignment.target);
-                switch (stmt->assignment.op) {
-                    case OP_ADD: codegen_emit(ctx, " + "); break;
-                    case OP_SUB: codegen_emit(ctx, " - "); break;
-                    case OP_MUL: codegen_emit(ctx, " * "); break;
-                    case OP_DIV: codegen_emit(ctx, " / "); break;
-                    case OP_MOD: codegen_emit(ctx, " %% "); break;
-                    default: codegen_emit(ctx, " /*compound?*/ "); break;
-                }
-                codegen_expression(ctx, stmt->assignment.value);
-            }
-                codegen_emit(ctx, ";\n");
-                break;
-            }
-
-            // Default case for simple declarations
-            codegen_emit(ctx, "%s %s", type_str, stmt->declaration.name);
-            if (stmt->declaration.initializer) {
-                codegen_emit(ctx, " = ");
-                codegen_expression(ctx, stmt->declaration.initializer);
             }
             codegen_emit(ctx, ";\n");
+            break;
         }
+
 
         case NODE_IF_STMT: {
             int else_label = codegen_new_label(ctx);
@@ -772,7 +780,7 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
             codegen_emit(ctx, ")) goto L%d;\n", else_label);
 
             ctx->indent_level++;
-            NodeList* body = stmt->if_stmt.then_branch;
+            NodeList* body = stmt->if_stmt.then_block;
             while (body) {
                 if (body->node) {
                     codegen_statement(ctx, body->node);
@@ -781,13 +789,13 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
             }
             ctx->indent_level--;
 
-            if (stmt->if_stmt.else_branch) {
+            if (stmt->if_stmt.else_block) {
                 codegen_emit_indent(ctx);
                 codegen_emit(ctx, "goto L%d;\n", end_label);
                 codegen_emit(ctx, "L%d:\n", else_label);
 
                 ctx->indent_level++;
-                body = stmt->if_stmt.else_branch;
+                body = stmt->if_stmt.else_block;
                 while (body) {
                     if (body->node) {
                         codegen_statement(ctx, body->node);
@@ -802,73 +810,11 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
             }
             break;
         }
-            int end_label = codegen_new_label(ctx);
-            int else_label = codegen_new_label(ctx);
-
-            codegen_emit(ctx, "if (!(");
-            codegen_expression(ctx, stmt->if_stmt.condition);
-            codegen_emit(ctx, ")) goto L%d;\n", else_label);
-
-            ctx->indent_level++;
-            NodeList* then_block = stmt->if_stmt.then_block;
-            while (then_block) {
-                if (then_block->node) {
-                    codegen_statement(ctx, then_block->node);
-                }
-                then_block = then_block->next;
-            }
-            ctx->indent_level--;
-
-            codegen_emit_indent(ctx);
-            codegen_emit(ctx, "goto L%d;\n", end_label);
-            codegen_emit(ctx, "L%d:\n", else_label);
-
-            if (stmt->if_stmt.else_block) {
-                ctx->indent_level++;
-                NodeList* else_block = stmt->if_stmt.else_block;
-                while (else_block) {
-                    if (else_block->node) {
-                        codegen_statement(ctx, else_block->node);
-                    }
-                    else_block = else_block->next;
-                }
-                ctx->indent_level--;
-            }
-
-            codegen_emit(ctx, "L%d:\n", end_label);
-            break;
-        }
 
         case NODE_WHILE_STMT: {
             int start_label = codegen_new_label(ctx);
             int end_label = codegen_new_label(ctx);
             codegen_loop_push(ctx, start_label, end_label, start_label);
-
-            codegen_emit(ctx, "L%d:\n", start_label);
-            codegen_emit_indent(ctx);
-            codegen_emit(ctx, "if (!(");
-            codegen_expression(ctx, stmt->while_stmt.condition);
-            codegen_emit(ctx, ")) goto L%d;\n", end_label);
-
-            ctx->indent_level++;
-            NodeList* body = stmt->while_stmt.body;
-            while (body) {
-                if (body->node) {
-                    codegen_statement(ctx, body->node);
-                }
-                body = body->next;
-            }
-            ctx->indent_level--;
-
-            codegen_emit_indent(ctx);
-            codegen_emit(ctx, "goto L%d;\n", start_label);
-            codegen_emit(ctx, "L%d:\n", end_label);
-            codegen_loop_pop(ctx);
-            break;
-        }
-            int start_label = codegen_new_label(ctx);
-            int end_label = codegen_new_label(ctx);
-            codegen_loop_push(ctx, start_label, end_label, start_label); // for while, continue goes to start
 
             codegen_emit(ctx, "L%d:\n", start_label);
             codegen_emit_indent(ctx);
@@ -903,27 +849,12 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
             }
             break;
         }
-            codegen_emit(ctx, "return");
-            if (stmt->return_stmt.value) {
-                codegen_emit(ctx, " ");
-                codegen_expression(ctx, stmt->return_stmt.value);
-            }
-            codegen_emit(ctx, ";\n");
-            break;
-        }
 
         case NODE_BREAK_STMT: {
             if (ctx->loop_top >= 0) {
                 codegen_emit(ctx, "goto L%d;\n", ctx->loop_end[ctx->loop_top]);
             } else {
-                codegen_emit(ctx, "/* break outside loop */\n");
-            }
-            break;
-        }
-            if (ctx->loop_top >= 0) {
-                codegen_emit(ctx, "goto L%d;\n", ctx->loop_end[ctx->loop_top]);
-            } else {
-                codegen_emit(ctx, "/* break outside loop */;\n");
+                codegen_emit(ctx, "/* break fora do loop */\n");
             }
             break;
         }
@@ -934,29 +865,13 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
                     ctx->loop_continue[ctx->loop_top] : ctx->loop_start[ctx->loop_top];
                 codegen_emit(ctx, "goto L%d;\n", continue_target);
             } else {
-                codegen_emit(ctx, "/* continue outside loop */\n");
-            }
-            break;
-        }
-            if (ctx->loop_top >= 0) {
-                // Use continue label if available (for for loops), otherwise use start
-                int continue_target = ctx->loop_continue[ctx->loop_top] ?
-                    ctx->loop_continue[ctx->loop_top] : ctx->loop_start[ctx->loop_top];
-                codegen_emit(ctx, "goto L%d;\n", continue_target);
-            } else {
-                codegen_emit(ctx, "/* continue outside loop */;\n");
+                codegen_emit(ctx, "/* continue fora do loop */\n");
             }
             break;
         }
 
         case NODE_EXPR_STMT: {
             codegen_expression(ctx, stmt->expr_stmt.expression);
-            codegen_emit(ctx, ";\n");
-            break;
-        }
-            if (stmt->expr_stmt.expression) {
-                codegen_expression(ctx, stmt->expr_stmt.expression);
-            }
             codegen_emit(ctx, ";\n");
             break;
         }
@@ -1013,7 +928,7 @@ void codegen_statement(CodeGenContext* ctx, ASTNode* stmt) {
         }
 
         default:
-            codegen_emit(ctx, "/* ERROR: unhandled statement type %d */\n", stmt->type);
+            codegen_emit(ctx, "/* ERRO: comando desconhecido %d */\n", stmt->type);
             break;
     }
 }
@@ -1175,16 +1090,29 @@ void codegen_expression(CodeGenContext* ctx, ASTNode* expr) {
                         codegen_emit(ctx, "__len)");
                         break;
                     case OP_IN:
-                        codegen_emit(ctx, "set_contains(");
-                        codegen_expression(ctx, right);
-                        codegen_emit(ctx, ", ");
-                        codegen_expression(ctx, right);
-                        codegen_emit(ctx, "__len, ");
-                        codegen_expression(ctx, left);
-                        codegen_emit(ctx, ")");
+                        if (left->type == NODE_IDENTIFIER && left->inferred_type &&
+                            (left->inferred_type->base_type == TYPE_SET || left->inferred_type->base_type == TYPE_ARRAY)) {
+                            codegen_emit(ctx, "set_is_subset(");
+                            codegen_expression(ctx, left);
+                            codegen_emit(ctx, ", ");
+                            codegen_expression(ctx, left);
+                            codegen_emit(ctx, "__len, ");
+                            codegen_expression(ctx, right);
+                            codegen_emit(ctx, ", ");
+                            codegen_expression(ctx, right);
+                            codegen_emit(ctx, "__len)");
+                        } else {
+                            codegen_emit(ctx, "set_contains(");
+                            codegen_expression(ctx, right);
+                            codegen_emit(ctx, ", ");
+                            codegen_expression(ctx, right);
+                            codegen_emit(ctx, "__len, ");
+                            codegen_expression(ctx, left);
+                            codegen_emit(ctx, ")");
+                        }
                         break;
                     default:
-                        codegen_emit(ctx, "/* unsupported set operation */");
+                        codegen_emit(ctx, "/* operacao de conjuntos nao suportada */");
                         break;
                 }
             } else {
@@ -1311,8 +1239,17 @@ void codegen_expression(CodeGenContext* ctx, ASTNode* expr) {
                                         codegen_expression(ctx, arg);
                                         codegen_emit(ctx, ", %s__len", arg->identifier.name);
                                     } else {
-                                        // Para expressões que resultam em arrays, isso é mais complexo
-                                        // Por enquanto, apenas o ponteiro
+                                        codegen_expression(ctx, arg);
+                                        codegen_emit(ctx, ", 0");
+                                    }
+                                    codegen_emit(ctx, ")");
+                                    return;
+                                case TYPE_SET:
+                                    codegen_emit(ctx, "mathc_print_set(");
+                                    if (arg->type == NODE_IDENTIFIER) {
+                                        codegen_expression(ctx, arg);
+                                        codegen_emit(ctx, ", %s__len", arg->identifier.name);
+                                    } else {
                                         codegen_expression(ctx, arg);
                                         codegen_emit(ctx, ", 0");
                                     }
@@ -1323,7 +1260,15 @@ void codegen_expression(CodeGenContext* ctx, ASTNode* expr) {
                                     break;
                             }
                         } else {
-                            if (arg->type == NODE_INT_LITERAL || arg->type == NODE_BOOL_LITERAL) {
+                            if (arg->type == NODE_ARRAY_ACCESS &&
+                                arg->array_access.array &&
+                                arg->array_access.array->type == NODE_IDENTIFIER &&
+                                arg->array_access.array->inferred_type &&
+                                arg->array_access.array->inferred_type->base_type == TYPE_ARRAY &&
+                                arg->array_access.array->inferred_type->element_type &&
+                                arg->array_access.array->inferred_type->element_type->base_type == TYPE_STRING) {
+                                codegen_emit(ctx, "mathc_print_string(");
+                            } else if (arg->type == NODE_INT_LITERAL || arg->type == NODE_BOOL_LITERAL) {
                                 codegen_emit(ctx, "mathc_print_int(");
                             } else if (arg->type == NODE_FLOAT_LITERAL) {
                                 codegen_emit(ctx, "mathc_print_float(");
@@ -1388,6 +1333,10 @@ void codegen_expression(CodeGenContext* ctx, ASTNode* expr) {
         }
 
         case NODE_ARRAY_ACCESS: {
+            if (!expr->array_access.array || !expr->array_access.index) {
+                codegen_emit(ctx, "/* acesso invalido de array */");
+                break;
+            }
             codegen_expression(ctx, expr->array_access.array);
             codegen_emit(ctx, "[");
             codegen_expression(ctx, expr->array_access.index);
@@ -1410,7 +1359,7 @@ void codegen_expression(CodeGenContext* ctx, ASTNode* expr) {
             break;
 
         default:
-            codegen_emit(ctx, "/* unhandled expr type %d */", expr->type);
+            codegen_emit(ctx, "/* expressao nao suportada %d */", expr->type);
             break;
     }
 }
@@ -1495,28 +1444,27 @@ void codegen_literal_elements(CodeGenContext* ctx, ASTNode* literal, const char*
             }
             break;
         }
+        default:
+            break;
     }
 }
 
 void codegen_array_literal(CodeGenContext* ctx, ASTNode* literal) {
-    // Isso não deveria ser chamado diretamente - literais são tratados nas declarações
-    codegen_emit(ctx, "/* ERROR: array literal used in expression */");
+    codegen_emit(ctx, "/* ERRO: array literal usado em expressão */");
 }
 
 void codegen_matrix_literal(CodeGenContext* ctx, ASTNode* literal) {
-    // Isso não deveria ser chamado diretamente - literais são tratados nas declarações
-    codegen_emit(ctx, "/* ERROR: matrix literal used in expression */");
+    codegen_emit(ctx, "/* ERRO: matrix literal usado em expressao */");
 }
 
 void codegen_set_literal(CodeGenContext* ctx, ASTNode* literal) {
-    // Isso não deveria ser chamado diretamente - literais são tratados nas declarações
-    codegen_emit(ctx, "/* ERROR: set literal used in expression */");
+    codegen_emit(ctx, "/* ERRO: set literal usado em expressao */");
 }
 
 void codegen_program(CodeGenContext* ctx, ASTNode* program) {
     if (!program) return;
-    DBG("program start");
-    if (!program || program->type != NODE_PROGRAM) { DBG("not a program node"); return; }
+    DBG("programa iniciado");
+    if (!program || program->type != NODE_PROGRAM) { DBG(""); return; }
 
     fputs("#include <stdio.h>\n", ctx->output);
     fputs("#include <stdlib.h>\n", ctx->output);
@@ -1524,7 +1472,7 @@ void codegen_program(CodeGenContext* ctx, ASTNode* program) {
     fputs("#include <math.h>\n", ctx->output);
     fputs("#include <complex.h>\n\n", ctx->output);
     codegen_runtime_helpers(ctx);
-    fputs("// Builtin functions\n", ctx->output);
+    fputs("// funcoes nativas\n", ctx->output);
     fputs("void mathc_print_int(int x) { printf(\"%d\\n\", x); }\n", ctx->output);
     fputs("void mathc_print_float(double x) { printf(\"%g\\n\", x); }\n", ctx->output);
     fputs("void mathc_print_string(char* x) { printf(\"%s\\n\", x); }\n", ctx->output);
@@ -1537,6 +1485,14 @@ void codegen_program(CodeGenContext* ctx, ASTNode* program) {
     fputs("        printf(\"%d\", arr[i]);\n", ctx->output);
     fputs("    }\n", ctx->output);
     fputs("    printf(\"]\\n\");\n", ctx->output);
+    fputs("}\n", ctx->output);
+    fputs("void mathc_print_set(int* set, int len) {\n", ctx->output);
+    fputs("    printf(\"{\");\n", ctx->output);
+    fputs("    for (int i = 0; i < len; i++) {\n", ctx->output);
+    fputs("        if (i > 0) printf(\", \");\n", ctx->output);
+    fputs("        printf(\"%d\", set[i]);\n", ctx->output);
+    fputs("    }\n", ctx->output);
+    fputs("    printf(\"}\\n\");\n", ctx->output);
     fputs("}\n\n", ctx->output);
 
     NodeList* defs = program->program.definitions;
@@ -1565,7 +1521,7 @@ void codegen_program(CodeGenContext* ctx, ASTNode* program) {
         fputs("}\n", ctx->output);
     }
 
-    fputs("/* global allocations cleanup */\n", ctx->output);
+    fputs("/* limpeza de alocacoes globais */\n", ctx->output);
     codegen_emit_frees(ctx);
-    DBG("program end");
+    DBG("programa finalizado");
 }

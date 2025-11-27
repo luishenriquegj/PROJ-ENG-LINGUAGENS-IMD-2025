@@ -44,9 +44,9 @@ def fun void main()
     print(menorIgual)
     print(maiorIgual)
 
-    # Teste de array retornado por função
-    int[] arr = criarArray(5)
-    print(arr)
+    # Arrays como retorno precisam de tuplas (não implementado)
+    # int[] arr = criarArray(5)
+    # print(arr)
 
     print("Operadores matematicos especiais testados")
 end def

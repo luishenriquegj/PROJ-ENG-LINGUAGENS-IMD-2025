@@ -17,7 +17,7 @@ def fun void main()
     float raiz = sqrt(16.0)
     float absoluto = abs(-42.5)
     float logaritmo = log(100.0)
-    float ln_e = ln(2.71828)
+    float ln_e = log(2.71828)
     float exponencial = exp(2.0)
 
     print(raiz)

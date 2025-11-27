@@ -1,0 +1,10 @@
+import io
+
+def fun void main()
+    int a = 10
+    int b = 3
+    a += 2
+    b -= 1
+    print(a)
+    print(b)
+end def

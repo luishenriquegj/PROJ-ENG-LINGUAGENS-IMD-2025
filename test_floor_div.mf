@@ -1,0 +1,8 @@
+import io
+
+def fun void main()
+    int x = 7
+    int y = 2
+    int z = x // y
+    print(z)
+end def

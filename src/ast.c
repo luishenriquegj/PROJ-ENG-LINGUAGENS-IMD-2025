@@ -75,6 +75,7 @@ ASTNode* create_string_literal(char* value, int line) {
     node->type = NODE_STRING_LITERAL;
     node->line = line;
     node->string_literal.value = strdup(value);
+    node->inferred_type = create_type_spec(TYPE_STRING, NULL, NULL);
     return node;
 }
 
@@ -100,7 +101,6 @@ ASTNode* create_identifier(char* name, int line) {
     node->line = line;
     node->identifier.name = strdup(name);
 
-    node->identifier.is_builtin =
         (strcmp(name, "print") == 0 ||
          strcmp(name, "range") == 0);
 

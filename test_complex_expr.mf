@@ -1,0 +1,8 @@
+import io
+
+def fun void main()
+    int a = 10
+    int b = 3
+    int c = a + b - 2 * 5 / 1 % 2
+    print(c)
+end def

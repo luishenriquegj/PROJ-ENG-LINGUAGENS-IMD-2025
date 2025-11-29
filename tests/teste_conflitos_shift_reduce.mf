@@ -1,0 +1,37 @@
+import io
+
+# Teste de conflitos shift-reduce
+def fun void main()
+    # Dangling else - conflito clássico
+    int x = 10
+    int y = 5
+    
+    if (x > 0)
+        if (y > 0)
+            print("ambos positivos")
+    else
+        print("x nao positivo")
+    
+    # Múltiplos elifs - pode causar conflitos
+    if (x > 10)
+        print("maior que 10")
+    elif (x > 5)
+        print("maior que 5")
+    elif (x > 0)
+        print("maior que 0")
+    else
+        print("menor ou igual a zero")
+    
+    # Expressões com múltiplos níveis de precedência
+    int resultado = x + y * 2 ^ 3 - 4 / 2
+    
+    # Chamadas de método aninhadas
+    print(x)
+    
+    # Newlines em diferentes contextos
+    int a = 1
+    int b = 2
+    
+    
+    int c = 3
+end def

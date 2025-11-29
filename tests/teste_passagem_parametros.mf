@@ -1,0 +1,83 @@
+import io
+
+# Teste de passagem por valor (tipos primitivos)
+def fun int somar(int a, int b)
+    print("Dentro de somar:")
+    print(a)
+    print(b)
+    return a + b
+end def
+
+# Teste com múltiplos tipos
+def fun float calcular(int x, float y, bool flag)
+    print("Parametros recebidos:")
+    print(x)
+    print(y)
+    print(flag)
+    
+    if (flag)
+        return x + y
+    return x - y
+end def
+
+# Teste com tipos compostos
+def fun int soma_array(int[] arr)
+    int soma = 0
+    for (item in arr)
+        soma += item
+    return soma
+end def
+
+# Teste com strings e chars
+def fun string concatenar(string s1, string s2, char sep)
+    print(s1)
+    print(s2)
+    print(sep)
+    return s1
+end def
+
+# Teste com números complexos
+def fun complex multiplicar_complexo(complex z1, complex z2)
+    print(z1)
+    print(z2)
+    return z1
+end def
+
+def fun void main()
+    # Teste 1: Passagem de literais
+    int resultado1 = somar(5, 10)
+    print(resultado1)
+    
+    # Teste 2: Passagem de variáveis
+    int x = 20
+    int y = 30
+    int resultado2 = somar(x, y)
+    print(resultado2)
+    
+    # Teste 3: Passagem de expressões
+    int resultado3 = somar(5 + 3, 10 * 2)
+    print(resultado3)
+    
+    # Teste 4: Múltiplos tipos
+    float resultado4 = calcular(10, 3.14, true)
+    print(resultado4)
+    
+    # Teste 5: Arrays
+    int[] numeros = [1, 2, 3, 4, 5]
+    int soma = soma_array(numeros)
+    print(soma)
+    
+    # Teste 6: Strings e chars
+    string frase = concatenar("Hello", "World", ' ')
+    print(frase)
+    
+    # Teste 7: Números complexos
+    complex z1 = 3+4i
+    complex z2 = 1-2i
+    complex resultado7 = multiplicar_complexo(z1, z2)
+    print(resultado7)
+    
+    # Teste 8: Chamadas aninhadas
+    int resultado8 = somar(somar(1, 2), somar(3, 4))
+    print(resultado8)
+end def

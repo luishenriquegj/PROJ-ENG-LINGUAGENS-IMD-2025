@@ -1,0 +1,58 @@
+import io
+import math
+
+# Teste de derivação completa: todas as construções da gramática
+def fun int calcular(int a, int b)
+    # Expressões complexas
+    int resultado = (a + b) * 2 - (a ^ 2) / (b + 1)
+    return resultado
+end def
+
+def fun void main()
+    # Declarações com diferentes tipos
+    int x = 10
+    float y = 3.14
+    bool flag = true
+    complex z = 3+4i
+    string msg = "teste"
+    char c = 'a'
+    
+    # Arrays e conjuntos
+    int[] arr = [1, 2, 3, 4, 5]
+    set[int] conjunto = {1, 2, 3}
+    
+    # Estruturas de controle aninhadas
+    if (x > 0)
+        while (y < 10.0)
+            for (item in arr)
+                if (item in conjunto)
+                    print(item)
+                    break
+            y += 1.0
+    elif (x < 0)
+        print("negativo")
+    else
+        print("zero")
+    
+    # Chamadas de função
+    int res = calcular(x, 5)
+    print(res)
+    
+    # Try-catch-finally
+    try
+        int divisao = x / 0
+    catch (int erro)
+        print("Erro de divisao")
+    finally
+        print("Finalizando")
+    
+    # Operadores de atribuição compostos
+    x += 5
+    x -= 2
+    x *= 3
+    x /= 2
+    
+    # Incremento e decremento
+    x++
+    --x
+end def

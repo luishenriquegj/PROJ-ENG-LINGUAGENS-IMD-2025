@@ -1,0 +1,49 @@
+import io
+import math
+
+def fun void main()
+    # Coerção int -> float
+    int x = 10
+    float y = 3.5
+    float resultado1 = x + y
+    print(resultado1)
+    
+    # Coerção em operações aritméticas
+    int a = 5
+    int b = 2
+    float divisao = a / b
+    print(divisao)
+    
+    # Coerção em comparações
+    bool comp1 = x < y
+    print(comp1)
+    
+    # Coerção em atribuições
+    float f = 42
+    print(f)
+    
+    # Coerção int -> float em expressões complexas
+    int i1 = 10
+    int i2 = 3
+    float result = (i1 + i2) / 2.0
+    print(result)
+    
+    # Coerção em passagem de parâmetros
+    float pi = 3.14159
+    int arredondado = testar_coercao(pi)
+    print(arredondado)
+    
+    # Coerção em arrays
+    int[] inteiros = [1, 2, 3]
+    float[] flutuantes = [1.5, 2.5, 3.5]
+    
+    # Operações mistas
+    float mix1 = inteiros[0] + flutuantes[0]
+    print(mix1)
+end def
+
+def fun int testar_coercao(float valor)
+    # Coerção implícita de float para int (truncamento)
+    int truncado = valor
+    return truncado
+end def

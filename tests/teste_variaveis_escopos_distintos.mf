@@ -1,0 +1,33 @@
+import io
+
+def fun void funcao1()
+    # x no escopo de funcao1
+    int x = 10
+    print(x)
+end def
+
+def fun void funcao2()
+    # x no escopo de funcao2 (diferente de funcao1)
+    int x = 20
+    print(x)
+end def
+
+def fun void funcao3()
+    # x no escopo de funcao3 (diferente das outras)
+    string x = "teste"
+    print(x)
+end def
+
+def fun void main()
+    # x no escopo de main
+    float x = 3.14
+    print(x)
+    
+    # Chama outras funções
+    funcao1()
+    funcao2()
+    funcao3()
+    
+    # x em main continua sendo float
+    print(x)
+end def

@@ -1,0 +1,130 @@
+import io
+
+# Passagem por valor - primitivos NÃO devem ser alterados
+def fun void tentar_modificar_int(int x)
+    print("Antes da modificacao:")
+    print(x)
+    
+    x = x + 10
+    
+    print("Depois da modificacao:")
+    print(x)
+end def
+
+def fun void tentar_modificar_float(float y)
+    print("Antes:")
+    print(y)
+    
+    y = y * 2.0
+    
+    print("Depois:")
+    print(y)
+end def
+
+def fun void tentar_modificar_bool(bool flag)
+    print("Antes:")
+    print(flag)
+    
+    flag = not flag
+    
+    print("Depois:")
+    print(flag)
+end def
+
+# Passagem de arrays - DEVEM ser alterados (referência)
+def fun void modificar_array(int[] arr)
+    print("Dentro da funcao - antes:")
+    for (item in arr)
+        print(item)
+    
+    # Modifica elementos
+    arr[0] = 999
+    arr[1] = 888
+    
+    print("Dentro da funcao - depois:")
+    for (item in arr)
+        print(item)
+end def
+
+# Teste com múltiplos parâmetros
+def fun void teste_misto(int x, int[] arr, float y)
+    print("Antes das modificacoes:")
+    print(x)
+    for (item in arr)
+        print(item)
+    print(y)
+    
+    # Modifica todos
+    x = x * 2
+    arr[0] = 0
+    y = y + 1.0
+    
+    print("Depois das modificacoes:")
+    print(x)
+    for (item in arr)
+        print(item)
+    print(y)
+end def
+
+def fun void main()
+    # Teste 1: Primitivos (por valor)
+    int a = 10
+    print("Main - antes de chamar funcao:")
+    print(a)
+    
+    tentar_modificar_int(a)
+    
+    print("Main - depois de chamar funcao:")
+    print(a)
+    
+    # Teste 2: Float
+    float b = 3.14
+    print("Float antes:")
+    print(b)
+    
+    tentar_modificar_float(b)
+    
+    print("Float depois:")
+    print(b)
+    
+    # Teste 3: Bool
+    bool flag = true
+    print("Bool antes:")
+    print(flag)
+    
+    tentar_modificar_bool(flag)
+    
+    print("Bool depois:")
+    print(flag)
+    
+    # Teste 4: Arrays (por referência)
+    int[] numeros = [1, 2, 3, 4, 5]
+    print("Array antes:")
+    for (num in numeros)
+        print(num)
+    
+    modificar_array(numeros)
+    
+    print("Array depois:")
+    for (num in numeros)
+        print(num)
+    
+    # Teste 5: Misto
+    int x = 5
+    int[] arr = [10, 20, 30]
+    float y = 2.5
+    
+    print("Antes de teste_misto:")
+    print(x)
+    for (item in arr)
+        print(item)
+    print(y)
+    
+    teste_misto(x, arr, y)
+    
+    print("Depois de teste_misto:")
+    print(x)
+    for (item in arr)
+        print(item)
+    print(y)
+end def

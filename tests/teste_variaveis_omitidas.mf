@@ -1,0 +1,15 @@
+import io
+
+def fun void main()
+    # Uso de variável não declarada
+    print(x)
+    
+    # Atribuição a variável não declarada
+    y = 10
+    
+    # Operação com variável não declarada
+    int resultado = z + 5
+    
+    # Passagem de variável não declarada
+    print(w)
+end def

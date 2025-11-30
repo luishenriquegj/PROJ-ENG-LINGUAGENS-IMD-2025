@@ -1,35 +1,111 @@
 import io
 
-def fun void main()
-    int[] arvore = [50, 30, 70, 20, 40, 60, 80, 10, 25, 35, 45]
-
-    print("Arvore binaria de busca (valores ordenados):")
-
-    int i = 0
-    while (i < 11)
-        print(arvore[i])
-        i = i + 1
-
-    int minimo = arvore[0]
-    int j = 1
-    while (j < 11)
-        if (arvore[j] < minimo)
-            minimo = arvore[j]
-        j = j + 1
-
-    print("Valor minimo:")
-    print(minimo)
-
-    int maximo = arvore[0]
-    int k = 1
-    while (k < 11)
-        if (arvore[k] > maximo)
-            maximo = arvore[k]
-        k = k + 1
-
-    print("Valor maximo:")
-    print(maximo)
-
-    print("Busca concluida")
+# Simula árvore binária usando arrays
+# indices: 0=raiz, 2i+1=esquerda, 2i+2=direita
+def fun int construir_arvore(int[] arvore, int tamanho, int valor, int indice)
+    # Se posição vazia, insere
+    if (indice >= tamanho)
+        return indice
+    
+    if (arvore[indice] == -1)
+        arvore[indice] = valor
+        return indice
+    
+    # Se o valor for menor vai pra esquerda
+    if (valor <= arvore[indice])
+        int esquerda = 2 * indice + 1
+        return construir_arvore(arvore, tamanho, valor, esquerda)
+    
+    # Se o valor for maior vai pra direita
+    int direita = 2 * indice + 2
+    return construir_arvore(arvore, tamanho, valor, direita)
 end def
 
+def fun int chave_minima(int[] arvore, int tamanho, int indice, int nivel)
+    if (indice >= tamanho)
+        return -1
+    
+    if (arvore[indice] == -1)
+        return -1
+    
+    int esquerda = 2 * indice + 1
+    
+    # Se não tem filho esquerdo, este é o mínimo
+    if (esquerda >= tamanho or arvore[esquerda] == -1)
+        print("Minimo:")
+        print(arvore[indice])
+        print("Nivel:")
+        print(nivel)
+        return arvore[indice]
+    
+    # Continua buscando na esquerda
+    return chave_minima(arvore, tamanho, esquerda, nivel + 1)
+end def
+
+def fun int chave_maxima(int[] arvore, int tamanho, int indice, int nivel)
+    if (indice >= tamanho)
+        return -1
+    
+    if (arvore[indice] == -1)
+        return -1
+    
+    int direita = 2 * indice + 2
+    
+    # Se não tem filho direito, este é o máximo
+    if (direita >= tamanho or arvore[direita] == -1)
+        print("Maximo:")
+        print(arvore[indice])
+        print("Nivel:")
+        print(nivel)
+        return arvore[indice]
+    
+    # Continua buscando na direita
+    return chave_maxima(arvore, tamanho, direita, nivel + 1)
+end def
+
+def fun void imprimir_niveis(int[] arvore, int tamanho, int nivel)
+    print("Nivel:")
+    print(nivel)
+    
+    int i = 0
+    while (i < tamanho)
+        if (arvore[i] != -1)
+            # Calcula nível do nó i
+            int nivel_no = 0
+            int temp = i
+            while (temp > 0)
+                temp = (temp - 1) / 2
+                nivel_no++
+            
+            if (nivel_no == nivel)
+                print(arvore[i])
+        i++
+end def
+
+def fun void main()
+    # Árvore com capacidade para 15 nós (altura 3)
+    int tamanho = 15
+    int[] arvore = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+    
+    # Sequência de valores para inserir
+    int[] valores = [50, 30, 70, 20, 40, 60, 80]
+    
+    # A) Transforme uma sequência de valores em uma árvore binária de busca.
+    print("Construindo arvore binária de busca")
+    for (valor in valores)
+        construir_arvore(arvore, tamanho, valor, 0)
+        print(valor)
+    
+    # B) Encontre a chave mínima da árvore, indicando seu nível.
+    int min = chave_minima(arvore, tamanho, 0, 0)
+    
+    # C) Encontre a chave máxima da árvore, indicando seu nível
+    int max = chave_maxima(arvore, tamanho, 0, 0)
+    
+    # D) Imprima a árvore de busca na saída padrão, nível a nível.
+    print("Arvore de busca:")
+    int nivel = 0
+    while (nivel < 4)
+        imprimir_niveis(arvore, tamanho, nivel)
+        nivel++
+end def

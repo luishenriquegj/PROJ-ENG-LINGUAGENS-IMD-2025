@@ -98,8 +98,17 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 
 ^[ \t]+ {
     if (at_bol && inside_brackets == 0) {
+        // Drena DEDENTs pendentes antes de processar o recuo da linha
+        if (pending_dedents > 0) {
+            pending_dedents--;
+            tok_line = yylineno; tok_col = curr_col + 1; tok_len = 0;
+            tokbuf_set_escaped("", 0);
+            yyless(0);
+            at_bol = 1;
+            return DEDENT;
+        }
         int spaces = 0;
-        for (int i = 0; yytext[i]; i++) spaces += (yytext[i] == '\t') ? 8 : 1;
+        for (int i = 0; yytext[i]; i++) spaces += (yytext[i] == '\t') ? 4 : 1;
         int level = spaces / 4;
 
         if (level > current_indent()) {
@@ -131,6 +140,15 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 
 ^[^ \t\n] {
     if (at_bol && inside_brackets == 0) {
+        // Drena DEDENTs pendentes antes de consumir tokens não-espaço
+        if (pending_dedents > 0) {
+            pending_dedents--;
+            tok_line = yylineno; tok_col = curr_col + 1; tok_len = 0;
+            tokbuf_set_escaped("", 0);
+            yyless(0);
+            at_bol = 1;
+            return DEDENT;
+        }
         int level = 0;
         if (level < current_indent()) {
             while (level < current_indent() && indent_top > 0) {
@@ -217,6 +235,7 @@ COMPLEX_I   ({INT}|{FLOAT})[ij]
 "char"      { at_bol = 0; RETTOK(CHAR_TYPE); }
 "string"    { at_bol = 0; RETTOK(STRING_TYPE); }
 "void"      { at_bol = 0; RETTOK(VOID_TYPE); }
+"undefined" { at_bol = 0; RETTOK(UNDEFINED_TYPE); }
 "matrix"    { at_bol = 0; RETTOK(MATRIX_TYPE); }
 "set"       { at_bol = 0; RETTOK(SET_TYPE); }
 "graph"     { at_bol = 0; RETTOK(GRAPH_TYPE); }

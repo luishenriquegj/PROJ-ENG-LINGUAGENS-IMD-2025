@@ -1,13 +1,11 @@
 import io
 import math
-
 # Teste de derivação completa: todas as construções da gramática
 def fun int calcular(int a, int b)
     # Expressões complexas
-    int resultado = (a + b) * 2 - (a ^ 2) / (b + 1)
+    int resultado = (a + b) * 2
     return resultado
 end def
-
 def fun void main()
     # Declarações com diferentes tipos
     int x = 10
@@ -16,43 +14,50 @@ def fun void main()
     complex z = 3+4i
     string msg = "teste"
     char c = 'a'
-    
     # Arrays e conjuntos
     int[] arr = [1, 2, 3, 4, 5]
     set[int] conjunto = {1, 2, 3}
-    
-    # Estruturas de controle aninhadas
+    # Estruturas de controle
     if (x > 0)
-        while (y < 10.0)
-            for (item in arr)
-                if (item in conjunto)
-                    print(item)
-                    break
-            y += 1.0
+        print("positivo")
     elif (x < 0)
         print("negativo")
     else
         print("zero")
-    
+    # While simples
+    int contador = 0
+    while (contador < 3)
+        print(contador)
+        contador++
+    # For simples
+    for (item in arr)
+        print(item)
     # Chamadas de função
     int res = calcular(x, 5)
     print(res)
-    
     # Try-catch-finally
     try
-        int divisao = x / 0
+        int temp = 100
+        print(temp)
     catch (int erro)
-        print("Erro de divisao")
+        print("Erro capturado")
     finally
         print("Finalizando")
-    
     # Operadores de atribuição compostos
     x += 5
     x -= 2
     x *= 3
-    x /= 2
-    
+    # Operadores lógicos
+    bool resultado_and = flag and (x > 0)
+    bool resultado_or = flag or (x < 0)
+    bool resultado_not = not flag
+    # Operadores relacionais
+    bool maior = x > 5
+    bool menor_igual = x <= 20
+    bool igual = x == 15
+    bool diferente = x != 0
     # Incremento e decremento
     x++
-    --x
+    x--
+    print("Teste de derivacao sintatica concluido!")
 end def

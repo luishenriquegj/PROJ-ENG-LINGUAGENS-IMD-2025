@@ -62,14 +62,65 @@ int main(int argc, char** argv) {
     TypeSpec* t_float = create_type_spec(TYPE_FLOAT, NULL, NULL);
     TypeSpec* t_int = create_type_spec(TYPE_INT, NULL, NULL);
 
-    const char* builtins[] = {"print","input","range","len","abs","sqrt","exp","log","sin","cos","tan","asin","acos","atan","floor","ceil","round","pow"};
-    TypeSpec* types[] = {t_void,t_void,t_void,t_int,t_float,t_float,t_float,t_float,t_float,t_float,t_float,t_float,t_float,t_float,t_float,t_float,t_float,t_float};
+    const char* builtins[] = {
+        "print","println","input","range","len",
+        // Matemática básica
+        "abs","sqrt","exp","log","log10","log2",
+        "sin","cos","tan","asin","acos","atan","atan2",
+        "sinh","cosh","tanh",
+        "floor","ceil","round","trunc",
+        "pow","fmod","fabs",
+        "max","min",
+        "rand","srand",
+        // Teoria dos números
+        "factorial","gcd","lcm","isprime",
+        "combinations","permutations",
+        // Estatísticas de arrays
+        "sum","mean","prod","std","variance",
+        "sort","reverse","append","pop","push",
+        "min_element","max_element","find","count",
+        // Operações com matrizes
+        "transpose","determinant","trace","matmul",
+        "identity","zeros","ones",
+        // Operações com conjuntos
+        "union","intersection","difference","symmetric_diff",
+        "is_subset","is_superset","cardinality",
+        // Operações com complexos
+        "real","imag","conjugate","phase","magnitude"
+    };
+    TypeSpec* types[] = {
+        t_void,t_void,t_void,t_void,t_int,
+        // Matemática básica
+        t_float,t_float,t_float,t_float,t_float,t_float,
+        t_float,t_float,t_float,t_float,t_float,t_float,t_float,
+        t_float,t_float,t_float,
+        t_float,t_float,t_float,t_float,
+        t_float,t_float,t_float,
+        t_float,t_float,
+        t_int,t_void,
+        // Teoria dos números
+        t_int,t_int,t_int,t_int,
+        t_int,t_int,
+        // Estatísticas de arrays
+        t_float,t_float,t_float,t_float,t_float,
+        t_void,t_void,t_void,t_int,t_void,
+        t_float,t_float,t_int,t_int,
+        // Operações com matrizes
+        t_void,t_float,t_float,t_void,
+        t_void,t_void,t_void,
+        // Operações com conjuntos
+        t_void,t_void,t_void,t_void,
+        t_int,t_int,t_int,
+        // Operações com complexos
+        t_float,t_float,t_void,t_float,t_float
+    };
     int count = sizeof(builtins)/sizeof(builtins[0]);
     for (int i=0;i<count;i++) {
         if (!symbol_table_lookup(symbol_table, builtins[i])) {
             symbol_table_insert(symbol_table, builtins[i], types[i], SYM_FUNC, 0, NULL);
         }
     }
+    // Removido: constantes nativas como variáveis para evitar conflito com macros no C
 
     printf("Iniciando análise sintática...\n");
     result = yyparse();

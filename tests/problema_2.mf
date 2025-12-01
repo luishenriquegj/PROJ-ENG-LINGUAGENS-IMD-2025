@@ -2,17 +2,16 @@ import io
 
 def fun void main()
     int quantIntervalo1 = 0  # [0, 25]
-    int quantIntervalo2 = 0  # [26, 50]
+    int quantIntervalo2 = 0  # [26, "string"]
     int quantIntervalo3 = 0  # [51, 75]
     int quantIntervalo4 = 0  # [76, 100]
-    
-    # TO DO: Precisa scanear os numeros?
+
     int[] numeros = [10, 30, 55, 80, 15, 45, 70, 95, 5, -1]
     
     for (numero in numeros)
         if (numero < 0)
             break
-        
+
         if (numero >= 0 and numero <= 25)
             quantIntervalo1++
         elif (numero >= 26 and numero <= 50)
@@ -21,9 +20,14 @@ def fun void main()
             quantIntervalo3++
         elif (numero >= 76 and numero <= 100)
             quantIntervalo4++
-    
+
+
+    print("Q1")
     print(quantIntervalo1)
+    print("Q2")
     print(quantIntervalo2)
+    print("Q3")
     print(quantIntervalo3)
+    print("Q4")
     print(quantIntervalo4)
 end def

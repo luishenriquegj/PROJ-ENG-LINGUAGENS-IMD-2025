@@ -1,6 +1,12 @@
 import io
 import math
 
+def fun int testar_coercao(float valor)
+    # Coerção implícita de float para int (truncamento)
+    int truncado = valor
+    return truncado
+end def
+
 def fun void main()
     # Coerção int -> float
     int x = 10
@@ -40,10 +46,4 @@ def fun void main()
     # Operações mistas
     float mix1 = inteiros[0] + flutuantes[0]
     print(mix1)
-end def
-
-def fun int testar_coercao(float valor)
-    # Coerção implícita de float para int (truncamento)
-    int truncado = valor
-    return truncado
 end def

@@ -1,4 +1,5 @@
 import io
+import math
 
 def fun void main()
     int a = 10

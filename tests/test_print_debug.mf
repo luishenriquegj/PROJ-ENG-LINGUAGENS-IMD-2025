@@ -1,0 +1,18 @@
+import io
+def fun void main()
+    int x = 10
+    int y = 20
+    string nome = "Teste"
+    print("Valor de x: ")
+    println(x)
+    print("Valor de y: ")
+    println(y)
+    print("Nome: ")
+    println(nome)
+    print("Concatenacao: ")
+    print(x)
+    print(" + ")
+    print(y)
+    print(" = ")
+    println(x + y)
+end def

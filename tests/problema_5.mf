@@ -1,22 +1,10 @@
 import io
 
-def fun void mdc(int n, int m, int r)
-    if (m % n == 0)
-        r = n
-        return
-
-    if (n % m == 0)
-        r = m
-        return
-
-    int resto = 0
-    if (m > n)
-        resto = m % n
-        mdc(n, resto, r)
+def fun int mdc(int a, int b)
+    if (b == 0)
+        return a;
     else
-        resto = n % m
-        mdc(m, resto, r)
-
+        return mdc(b, a % b);
 end def
 
 def fun void main()
@@ -24,7 +12,7 @@ def fun void main()
     int b = 18
     int resultado
 
-    mdc(a, b, resultado)
+    resultado = mdc(a, b)
 
     print("MDC de ")
     print(a)
@@ -32,7 +20,4 @@ def fun void main()
     print(b)
     print(" = ")
     print(resultado)
-    
 end def
-
-

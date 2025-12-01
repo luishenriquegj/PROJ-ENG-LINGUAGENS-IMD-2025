@@ -1,0 +1,54 @@
+import io
+import math
+
+# Teste de funções matemáticas avançadas
+
+def fun void main()
+    print("=== Funcoes Matematicas Avancadas ===")
+    print("")
+
+    # Fatorial
+    print("Fatorial de 5:")
+    print(factorial(5))
+    print("Fatorial de 10:")
+    print(factorial(10))
+    print("")
+
+    # MDC e MMC
+    print("MDC(48, 18):")
+    print(gcd(48, 18))
+    print("MMC(12, 18):")
+    print(lcm(12, 18))
+    print("")
+
+    # Números primos
+    print("7 eh primo?")
+    print(isprime(7))
+    print("10 eh primo?")
+    print(isprime(10))
+    print("17 eh primo?")
+    print(isprime(17))
+    print("")
+
+    # Combinações e Permutações
+    print("C(5,2):")
+    print(combinations(5, 2))
+    print("P(5,2):")
+    print(permutations(5, 2))
+    print("")
+
+    # Estatísticas de arrays
+    int[] dados = [10, 20, 30, 40, 50]
+    print("Dados:")
+    print(dados)
+    print("Soma:")
+    print(sum(dados))
+    print("Media:")
+    print(mean(dados))
+    print("Desvio Padrao:")
+    print(std(dados))
+    print("")
+
+    print("=== Teste Concluido ===")
+end def
+

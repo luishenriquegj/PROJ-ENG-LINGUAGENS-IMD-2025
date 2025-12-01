@@ -18,7 +18,7 @@ def fun void main()
     int x
     x = 42
 
-    const int PI = 314
+    const int PI_INT = 314
     print(a)
     print(b)
     print(c)

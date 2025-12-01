@@ -8,6 +8,8 @@
 
 extern int yylex();
 extern int yylineno;
+extern int yychar;
+
 void yyerror(const char* s);
 
 extern SymbolTable *symbol_table;
@@ -110,7 +112,7 @@ static void print_syntax_error(const char* msg) {
 %token DEF END FUN IF ELIF ELSE WHILE FOR IN RETURN BREAK CONTINUE
 %token TRY CATCH FINALLY IMPORT CONST THIS NEW PRINT RANGE CLASS
 %token INT_TYPE FLOAT_TYPE BOOL_TYPE COMPLEX_TYPE CHAR_TYPE STRING_TYPE
-%token VOID_TYPE MATRIX_TYPE SET_TYPE GRAPH_TYPE
+%token VOID_TYPE UNDEFINED_TYPE MATRIX_TYPE SET_TYPE GRAPH_TYPE
 %token PLUS MINUS STAR SLASH FLOOR_DIV MOD POWER MATMUL
 %token ASSIGN PLUS_ASSIGN MINUS_ASSIGN STAR_ASSIGN SLASH_ASSIGN MOD_ASSIGN
 %token INCREMENT DECREMENT
@@ -185,6 +187,10 @@ import_list
 
 import
     : IMPORT IDENTIFIER NEWLINE {
+        $$ = create_import($2, yylineno);
+        free($2);
+    }
+    | IMPORT STRING_LITERAL NEWLINE {
         $$ = create_import($2, yylineno);
         free($2);
     }
@@ -303,6 +309,7 @@ primitive_type
     | CHAR_TYPE { $$ = create_type_spec(TYPE_CHAR, NULL, NULL); }
     | STRING_TYPE { $$ = create_type_spec(TYPE_STRING, NULL, NULL); }
     | VOID_TYPE { $$ = create_type_spec(TYPE_VOID, NULL, NULL); }
+    | UNDEFINED_TYPE { $$ = create_type_spec(TYPE_UNDEFINED, NULL, NULL); }
     ;
 
 array_type
@@ -326,7 +333,7 @@ indented_block
     : INDENT statement_list { $$ = $2; }
     ;
 
-// Correção para blocos vazios
+/* Correção para blocos vazios */
 statement_list
     : %empty { $$ = NULL; }
     | statement_list statement {
@@ -379,7 +386,17 @@ declaration
     ;
 
 assignment
-    : postfix_expr assign_op expression { $$ = create_assignment($1, $2, $3, yylineno); }
+    : postfix_expr assign_op expression {
+        /* Valida que target existe se for identificador simples */
+        if ($1->type == NODE_IDENTIFIER) {
+            Symbol* s = symbol_table_lookup(symbol_table, $1->identifier.name);
+            if (!s) {
+                undeclared_variable_error($1->identifier.name, yylineno);
+                exit(1);
+            }
+        }
+        $$ = create_assignment($1, $2, $3, yylineno);
+    }
     ;
 
 assign_op
@@ -597,35 +614,12 @@ postfix_expr
             char *func_name = $1->identifier.name;
 
             Symbol *sym = symbol_table_lookup(symbol_table, func_name);
-            if (!sym || sym->kind != SYM_FUNC) {
-                fprintf(stderr, "Erro: '%s' não é uma função declarada (linha %d)\n", func_name, yylineno);
-                exit(1);
-            }
+            /* Relaxa verificação: permite forward references; só valida se houver assinatura (params != NULL) */
+            int is_user_func = (sym && sym->kind == SYM_FUNC && sym->params != NULL);
 
             NodeList* args = $3 ? reverse_node_list($3) : NULL;
-
-            // Check if it's a builtin function
-            int is_builtin = (strcmp(func_name, "print") == 0 ||
-                             strcmp(func_name, "input") == 0 ||
-                             strcmp(func_name, "range") == 0 ||
-                             strcmp(func_name, "len") == 0 ||
-                             strcmp(func_name, "abs") == 0 ||
-                             strcmp(func_name, "sqrt") == 0 ||
-                             strcmp(func_name, "exp") == 0 ||
-                             strcmp(func_name, "log") == 0 ||
-                             strcmp(func_name, "sin") == 0 ||
-                             strcmp(func_name, "cos") == 0 ||
-                             strcmp(func_name, "tan") == 0 ||
-                             strcmp(func_name, "asin") == 0 ||
-                             strcmp(func_name, "acos") == 0 ||
-                             strcmp(func_name, "atan") == 0 ||
-                             strcmp(func_name, "floor") == 0 ||
-                             strcmp(func_name, "ceil") == 0 ||
-                             strcmp(func_name, "round") == 0 ||
-                             strcmp(func_name, "pow") == 0);
-
-            // Only check parameters for user-defined functions
-            if (!is_builtin) {
+            // Apenas checa parâmetros se soubermos a assinatura
+            if (is_user_func && sym) {
                 int expected_count = count_params(sym->params);
                 int actual_count   = count_nodelist(args);
 
@@ -635,30 +629,10 @@ postfix_expr
                             func_name, expected_count, actual_count, yylineno);
                     exit(1);
                 }
-
-                // Skip parameter type checking for now to avoid issues
-                /*
-                ParamList *p = sym->params;
-                NodeList *a = args;
-
-                while (p && a) {
-                    if (p->type->base_type != a->node->inferred_type->base_type) {
-                        fprintf(stderr,
-                                "Erro de tipo na chamada '%s': esperado %s, recebido %s (linha %d)\n",
-                                func_name,
-                                datatype_to_string(p->type->base_type),
-                                datatype_to_string(a->node->inferred_type->base_type),
-                                yylineno);
-                        exit(1);
-                    }
-                    p = p->next;
-                    a = a->next;
-                }
-                */
             }
 
-            $$ = create_call($1, args, yylineno); 
-            if (sym->type) $$->inferred_type = sym->type;
+            $$ = create_call($1, args, yylineno);
+            if (is_user_func && sym && sym->type) $$->inferred_type = sym->type;
         } else {
             NodeList* args = $3 ? reverse_node_list($3) : NULL;
             $$ = create_call($1, args, yylineno);
@@ -681,12 +655,8 @@ postfix_expr
 primary_expr
     : literal
     | IDENTIFIER { 
-        Symbol* s = symbol_table_lookup(symbol_table, $1);
-        if (!s) {
-            undeclared_variable_error($1, yylineno);
-            exit(1);
-        }
-        $$ = create_identifier($1, yylineno); 
+        /* Aceita qualquer identificador - validação será feita no uso (permite forward reference) */
+        $$ = create_identifier($1, yylineno);
         free($1);
     }
     | PRINT { $$ = create_identifier("print", yylineno); }

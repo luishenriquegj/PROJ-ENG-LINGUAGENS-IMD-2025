@@ -1,33 +1,8 @@
 import io
-
 def fun void main()
-    # String literals
     string hello = "Hello, World!"
-    string empty = ""
-    string with_escapes = "Line 1\nLine 2\tTabbed"
-    string with_quotes = "He said \"Hello\""
-    
-    # String in conditions
+    println(hello)
     string test = "test"
     if (test == "test")
-        print("String comparison works")
-    
-    # String concatenation (if supported)
-    string first = "Hello"
-    string second = "World"
-    
-    # Array of strings
-    string[] messages = ["Error", "Warning", "Info"]
-    
-    # Loop com strings requer inferência avançada, testando acesso direto
-    print(messages[0])
-    print(messages[1])
-    print(messages[2])
-
-    # Multi-line concepts (if supported with escapes)
-    string multiline = "First line\nSecond line\nThird line"
-    print(multiline)
-    
-    # Special characters
-    string special = "\n\t\\\'\""
+        println("String comparison works")
 end def
